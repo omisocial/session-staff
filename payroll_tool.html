@@ -380,6 +380,8 @@ textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(51,102,255,
     <div class="sidebar-item" onclick="showPaste()"><span class="si-icon">📋</span> <span data-i="btnPaste">วาง Excel</span></div>
     <div class="sidebar-item" onclick="doExport()"><span class="si-icon">⬇</span> CSV</div>
     <div class="sidebar-item" onclick="doExportXlsx()"><span class="si-icon">📤</span> Excel</div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-item" onclick="sw('config',document.querySelectorAll('.tab')[3])"><span class="si-icon">⚙️</span> <span data-i="tabConfig">ตั้งค่า</span></div>
   </div>
   <div class="sidebar-footer">
     <div class="lang-sw">
@@ -462,6 +464,7 @@ textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(51,102,255,
     <button class="tab on" onclick="sw('input',this)" data-i="tabInput">📝 บันทึกเวลา</button>
     <button class="tab" onclick="sw('result',this)" data-i="tabResult">📊 ผลคำนวณ</button>
     <button class="tab" onclick="sw('summary',this)" data-i="tabSummary">📋 สรุปยอด</button>
+    <button class="tab" onclick="sw('config',this)" data-i="tabConfig">⚙️ ตั้งค่า</button>
   </div>
 
   <!-- ═══ PANE: INPUT ═══ -->
@@ -472,6 +475,7 @@ textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(51,102,255,
       <button class="btn btn-o" onclick="triggerImportXlsx()" data-i="btnImportXlsx">📥 นำเข้า Excel</button>
       <input type="file" id="xlsxFileInput" accept=".xlsx,.xls" style="display:none" onchange="handleImportXlsx(event)">
       <button class="btn btn-o" onclick="doCalc();sw('result',document.querySelectorAll('.tab')[1])" data-i="btnCalc">⚡ คำนวณ</button>
+      <button class="btn btn-p" onclick="doPaymentCalc()" data-i="btnPayCalc" style="background:linear-gradient(135deg,#7c3aed,#3366FF)">💳 คำนวณจ่ายเงิน</button>
     </div>
     <!-- Bulk actions (visible when >0 employees) -->
     <div id="bulkBar" class="bulk-bar" style="display:none">
@@ -522,6 +526,41 @@ textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(51,102,255,
   <div id="pane-summary" class="pane">
     <div id="summaryContent">
       <div class="empty-state"><div class="es-icon">📋</div><div class="es-sub" data-i="sumEmpty">กดปุ่ม ⚡ คำนวณก่อน</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ PANE: CONFIG ═══ -->
+  <div id="pane-config" class="pane">
+    <div class="card">
+      <div class="card-hdr"><span class="card-title" data-i="cfgRatesTitle">💰 อัตราค่าแรง</span></div>
+      <div class="card-body">
+        <div class="g2">
+          <div class="fg"><label data-i="cfgFullWage">ค่าแรงกะเต็ม (>6 ชม.)</label><input type="number" id="cfg_fullShiftWage" step="1" min="0"></div>
+          <div class="fg"><label data-i="cfgBmShort">ค่าแรง BM กะสั้น (≤6 ชม.)</label><input type="number" id="cfg_bmShortWage" step="1" min="0"></div>
+          <div class="fg"><label data-i="cfgDwShort">ค่าแรง DW กะสั้น (≤6 ชม.)</label><input type="number" id="cfg_dwShortWage" step="1" min="0"></div>
+          <div class="fg"><label data-i="cfgInternWage">ค่าแรงฝึกงาน (Flat)</label><input type="number" id="cfg_internWage" step="1" min="0"></div>
+          <div class="fg"><label data-i="cfgFullHrs">ชั่วโมงกะเต็ม (Q)</label><input type="number" id="cfg_fullShiftHours" step="0.5" min="1"></div>
+          <div class="fg"><label data-i="cfgShortHrs">ชั่วโมงกะสั้น (Q)</label><input type="number" id="cfg_shortShiftHours" step="0.5" min="1"></div>
+          <div class="fg"><label data-i="cfgShortThresh">เกณฑ์แยกกะสั้น/เต็ม (ชม.)</label><input type="number" id="cfg_shortThreshold" step="0.5" min="1"></div>
+          <div class="fg"><label data-i="cfgOtMult">ตัวคูณ OT</label><input type="number" id="cfg_otMultiplier" step="0.1" min="0"></div>
+          <div class="fg"><label data-i="cfgLateBlock">BM ปัดสาย (นาที)</label><input type="number" id="cfg_lateRoundBlock" step="1" min="1"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-hdr"><span class="card-title" data-i="cfgTeamsTitle">👥 ทีม</span></div>
+      <div class="card-body">
+        <div class="fg" style="margin-bottom:12px"><label data-i="cfgBmTeams">ทีม BM (คั่นด้วยเครื่องหมายจุลภาค)</label><input type="text" id="cfg_bmTeams" placeholder="BM1, BM2, BM3"></div>
+        <div class="fg" style="margin-bottom:12px"><label data-i="cfgDwTeams">ทีม DW (คั่นด้วยเครื่องหมายจุลภาค)</label><input type="text" id="cfg_dwTeams" placeholder="DW1, DW2, DW3"></div>
+        <div class="fg"><label data-i="cfgInternLabels">ชื่อกลุ่มฝึกงาน (คั่นด้วยเครื่องหมายจุลภาค)</label><input type="text" id="cfg_internLabels" placeholder="ฝึกงาน BM, นักศึกษาฝึกงาน"></div>
+      </div>
+    </div>
+    <div class="action-row">
+      <button class="btn btn-p" onclick="saveConfigUI()" data-i="cfgSave">💾 บันทึก</button>
+      <button class="btn btn-o" onclick="resetConfigUI()" data-i="cfgReset">↩️ คืนค่าเริ่มต้น</button>
+      <button class="btn btn-o" onclick="exportConfigFile()" data-i="cfgExport">📤 ส่งออก JSON</button>
+      <button class="btn btn-o" onclick="document.getElementById('cfgImportFile').click()" data-i="cfgImport">📥 นำเข้า JSON</button>
+      <input type="file" id="cfgImportFile" accept=".json" style="display:none" onchange="importConfigFile(event)">
     </div>
   </div>
 
@@ -600,6 +639,28 @@ th:{
   btnImportXlsx:'📥 นำเข้า Excel',btnExportXlsx:'📤 Excel',
   toastXlsxImport:'✅ นำเข้า Excel สำเร็จ',toastXlsxExport:'📤 ส่งออก Excel แล้ว',
   toastXlsxNoData:'⚠️ ไม่พบข้อมูลในไฟล์',toastXlsxError:'❌ อ่านไฟล์ไม่ได้',
+  tabConfig:'⚙️ ตั้งค่า',cfgRatesTitle:'💰 อัตราค่าแรง',cfgTeamsTitle:'👥 ทีม',
+  cfgFullWage:'ค่าแรงกะเต็ม (>6 ชม.)',cfgBmShort:'ค่าแรง BM กะสั้น (≤6 ชม.)',
+  cfgDwShort:'ค่าแรง DW กะสั้น (≤6 ชม.)',cfgInternWage:'ค่าแรงฝึกงาน (Flat)',
+  cfgFullHrs:'ชั่วโมงกะเต็ม (Q)',cfgShortHrs:'ชั่วโมงกะสั้น (Q)',
+  cfgShortThresh:'เกณฑ์แยกกะสั้น/เต็ม (ชม.)',cfgOtMult:'ตัวคูณ OT',
+  cfgLateBlock:'BM ปัดสาย (นาที)',
+  cfgBmTeams:'ทีม BM (คั่นด้วยเครื่องหมายจุลภาค)',cfgDwTeams:'ทีม DW (คั่นด้วยเครื่องหมายจุลภาค)',
+  cfgInternLabels:'ชื่อกลุ่มฝึกงาน (คั่นด้วยเครื่องหมายจุลภาค)',
+  cfgSave:'💾 บันทึก',cfgReset:'↩️ คืนค่าเริ่มต้น',cfgExport:'📤 ส่งออก JSON',cfgImport:'📥 นำเข้า JSON',
+  toastCfgSaved:'✅ บันทึกการตั้งค่าแล้ว',toastCfgReset:'↩️ คืนค่าเริ่มต้นแล้ว',
+  toastCfgExport:'📤 ส่งออก JSON แล้ว',toastCfgImport:'📥 นำเข้า JSON แล้ว',toastCfgImportErr:'❌ ไฟล์ JSON ไม่ถูกต้อง',
+  btnPayCalc:'💳 คำนวณจ่ายเงิน',
+  payTitle:'💳 สรุปการจ่ายเงิน',payDateRange:'ช่วงวันที่จ่าย',payDayRule:'กฎการจ่ายตามวัน',
+  payMonRule:'วันจันทร์: จ่าย BM1 ×3 วัน (ส.–จ.)',
+  payTueThuRule:'อ.–พฤ.: จ่าย BM1 เฉพาะวันนี้',
+  payFriRule:'วันศุกร์: BM1 วันนี้ + BM2-4 ×7 วัน (พ.→อ.)',
+  payWeekendInfo:'⚠️ ส./อา. ไม่มีรอบจ่ายเงิน — รวมจ่ายในวันจันทร์',
+  payNoDate:'⚠️ กรุณาเลือกวันที่ก่อน',payNoBM1:'⚠️ ไม่พบพนักงาน BM1',
+  payNoBM24:'ℹ️ ไม่พบพนักงาน BM2-4 (ข้ามรอบ BM2-4)',
+  payBM1Section:'💰 ค่าแรง BM1',payBM24Section:'💰 ค่าแรง BM2-4',
+  payDays:'วัน',payMultiplier:'ตัวคูณ',paySubtotal:'ยอดรวมย่อย',
+  payGrandTotal:'💵 ยอดจ่ายรวมทั้งหมด',payPeriod:'ช่วง',payPerDay:'ต่อวัน',payTotalDays:'รวมวัน',
 },
 en:{
   appTitle:'Daily Payroll',
@@ -638,6 +699,28 @@ en:{
   btnImportXlsx:'📥 Import Excel',btnExportXlsx:'📤 Excel',
   toastXlsxImport:'✅ Excel imported',toastXlsxExport:'📤 Excel exported',
   toastXlsxNoData:'⚠️ No data found in file',toastXlsxError:'❌ Cannot read file',
+  tabConfig:'⚙️ Config',cfgRatesTitle:'💰 Payroll Rates',cfgTeamsTitle:'👥 Teams',
+  cfgFullWage:'Full Shift Wage (>6h)',cfgBmShort:'BM Short Wage (≤6h)',
+  cfgDwShort:'DW Short Wage (≤6h)',cfgInternWage:'Intern Wage (Flat)',
+  cfgFullHrs:'Full Shift Hours (Q)',cfgShortHrs:'Short Shift Hours (Q)',
+  cfgShortThresh:'Short/Full Threshold (hrs)',cfgOtMult:'OT Multiplier',
+  cfgLateBlock:'BM Late Rounding (min)',
+  cfgBmTeams:'BM Teams (comma-separated)',cfgDwTeams:'DW Teams (comma-separated)',
+  cfgInternLabels:'Intern Labels (comma-separated)',
+  cfgSave:'💾 Save',cfgReset:'↩️ Reset to Default',cfgExport:'📤 Export JSON',cfgImport:'📥 Import JSON',
+  toastCfgSaved:'✅ Config saved',toastCfgReset:'↩️ Reset to defaults',
+  toastCfgExport:'📤 JSON exported',toastCfgImport:'📥 JSON imported',toastCfgImportErr:'❌ Invalid JSON file',
+  btnPayCalc:'💳 Payment Calculation',
+  payTitle:'💳 Payment Summary',payDateRange:'Payment Date Range',payDayRule:'Payment Rule for This Day',
+  payMonRule:'Monday: Pay BM1 ×3 days (Sat–Mon)',
+  payTueThuRule:'Tue–Thu: Pay BM1 for this day only',
+  payFriRule:'Friday: BM1 today + BM2-4 ×7 days (Wed→Tue)',
+  payWeekendInfo:'⚠️ Sat/Sun has no payment cycle — included in Monday',
+  payNoDate:'⚠️ Please select a date first',payNoBM1:'⚠️ No BM1 employees found',
+  payNoBM24:'ℹ️ No BM2-4 employees found (skipping BM2-4 cycle)',
+  payBM1Section:'💰 BM1 Wages',payBM24Section:'💰 BM2-4 Wages',
+  payDays:'days',payMultiplier:'Multiplier',paySubtotal:'Subtotal',
+  payGrandTotal:'💵 Grand Total Payment',payPeriod:'Period',payPerDay:'per day',payTotalDays:'total days',
 },
 vi:{
   appTitle:'Tính Lương Ngày',
@@ -676,6 +759,28 @@ vi:{
   btnImportXlsx:'📥 Nhập Excel',btnExportXlsx:'📤 Excel',
   toastXlsxImport:'✅ Nhập Excel thành công',toastXlsxExport:'📤 Đã xuất Excel',
   toastXlsxNoData:'⚠️ Không tìm thấy dữ liệu',toastXlsxError:'❌ Không đọc được file',
+  tabConfig:'⚙️ Cấu hình',cfgRatesTitle:'💰 Mức lương',cfgTeamsTitle:'👥 Nhóm',
+  cfgFullWage:'Lương ca đủ (>6h)',cfgBmShort:'Lương BM ca ngắn (≤6h)',
+  cfgDwShort:'Lương DW ca ngắn (≤6h)',cfgInternWage:'Lương thực tập (Flat)',
+  cfgFullHrs:'Giờ ca đủ (Q)',cfgShortHrs:'Giờ ca ngắn (Q)',
+  cfgShortThresh:'Ngưỡng ca ngắn/đủ (giờ)',cfgOtMult:'Hệ số OT',
+  cfgLateBlock:'BM làm tròn muộn (phút)',
+  cfgBmTeams:'Nhóm BM (phân cách bằng dấu phẩy)',cfgDwTeams:'Nhóm DW (phân cách bằng dấu phẩy)',
+  cfgInternLabels:'Tên nhóm thực tập (phân cách bằng dấu phẩy)',
+  cfgSave:'💾 Lưu',cfgReset:'↩️ Khôi phục mặc định',cfgExport:'📤 Xuất JSON',cfgImport:'📥 Nhập JSON',
+  toastCfgSaved:'✅ Đã lưu cấu hình',toastCfgReset:'↩️ Đã khôi phục mặc định',
+  toastCfgExport:'📤 Đã xuất JSON',toastCfgImport:'📥 Đã nhập JSON',toastCfgImportErr:'❌ File JSON không hợp lệ',
+  btnPayCalc:'💳 Tính thanh toán',
+  payTitle:'💳 Tổng hợp thanh toán',payDateRange:'Khoảng ngày thanh toán',payDayRule:'Quy tắc thanh toán theo ngày',
+  payMonRule:'Thứ Hai: Trả BM1 ×3 ngày (T7–T2)',
+  payTueThuRule:'T3–T5: Trả BM1 chỉ ngày hôm nay',
+  payFriRule:'Thứ Sáu: BM1 hôm nay + BM2-4 ×7 ngày (T4→T3)',
+  payWeekendInfo:'⚠️ T7/CN không có chu kỳ thanh toán — gộp vào thứ Hai',
+  payNoDate:'⚠️ Vui lòng chọn ngày trước',payNoBM1:'⚠️ Không tìm thấy nhân viên BM1',
+  payNoBM24:'ℹ️ Không tìm thấy nhân viên BM2-4 (bỏ qua chu kỳ BM2-4)',
+  payBM1Section:'💰 Lương BM1',payBM24Section:'💰 Lương BM2-4',
+  payDays:'ngày',payMultiplier:'Hệ số nhân',paySubtotal:'Tạm tính',
+  payGrandTotal:'💵 Tổng thanh toán',payPeriod:'Kỳ',payPerDay:'mỗi ngày',payTotalDays:'tổng ngày',
 }};
 
 let CUR_LANG='th';
@@ -700,6 +805,86 @@ function setLang(l){
 }
 
 // ══════════════════════════════════════════
+//  CONFIG SYSTEM
+// ══════════════════════════════════════════
+const CONFIG_LS_KEY='payroll_config';
+const DEFAULT_CFG={payrollRates:{fullShiftWage:500,bmShortWage:400,dwShortWage:350,internWage:100,fullShiftHours:8,shortShiftHours:5,shortThreshold:6,otMultiplier:1.5,lateRoundBlock:15},teams:{bm:['BM1','BM2','BM3','BM4','BMN','BMM'],dw:['DW1','DW2','DW3','DWN','DWM'],internLabels:['ฝึกงาน BM','นักศึกษาฝึกงาน']}};
+let CFG=JSON.parse(JSON.stringify(DEFAULT_CFG));
+
+function loadConfig(){
+  const saved=localStorage.getItem(CONFIG_LS_KEY);
+  if(saved){try{CFG=JSON.parse(saved);applyConfig();return;}catch(e){}}
+  // Try fetch config.json, fallback to defaults
+  fetch('config.json').then(r=>{if(r.ok)return r.json();throw 0;}).then(j=>{CFG=j;applyConfig();}).catch(()=>{CFG=JSON.parse(JSON.stringify(DEFAULT_CFG));applyConfig();});
+}
+
+function saveConfig(cfg){
+  CFG=cfg;
+  localStorage.setItem(CONFIG_LS_KEY,JSON.stringify(cfg));
+  applyConfig();
+}
+
+function applyConfig(){
+  const p=CFG.payrollRates||{};
+  R.FULL=p.fullShiftWage||500;R.BM_S=p.bmShortWage||400;R.DW_S=p.dwShortWage||350;
+  R.INTERN=p.internWage||100;R.Q_F=p.fullShiftHours||8;R.Q_S=p.shortShiftHours||5;
+  R.SHORT=p.shortThreshold||6;R.OT=p.otMultiplier||1.5;R.BLOCK=p.lateRoundBlock||15;
+  const tm=CFG.teams||{};
+  BM.clear();(tm.bm||[]).forEach(t=>BM.add(t));
+  DW.clear();(tm.dw||[]).forEach(t=>DW.add(t));
+  TEAMS.length=0;TEAMS.push(...(tm.bm||[]),...(tm.dw||[]),...(tm.internLabels||[]));
+  fillConfigUI();
+}
+
+function fillConfigUI(){
+  const p=CFG.payrollRates||{};
+  const tm=CFG.teams||{};
+  const f=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+  f('cfg_fullShiftWage',p.fullShiftWage);f('cfg_bmShortWage',p.bmShortWage);
+  f('cfg_dwShortWage',p.dwShortWage);f('cfg_internWage',p.internWage);
+  f('cfg_fullShiftHours',p.fullShiftHours);f('cfg_shortShiftHours',p.shortShiftHours);
+  f('cfg_shortThreshold',p.shortThreshold);f('cfg_otMultiplier',p.otMultiplier);
+  f('cfg_lateRoundBlock',p.lateRoundBlock);
+  f('cfg_bmTeams',(tm.bm||[]).join(', '));f('cfg_dwTeams',(tm.dw||[]).join(', '));
+  f('cfg_internLabels',(tm.internLabels||[]).join(', '));
+}
+
+function saveConfigUI(){
+  const g=(id)=>{const el=document.getElementById(id);return el?el.value:'';};
+  const split=(s)=>s.split(',').map(x=>x.trim()).filter(Boolean);
+  const cfg={payrollRates:{fullShiftWage:+g('cfg_fullShiftWage')||500,bmShortWage:+g('cfg_bmShortWage')||400,dwShortWage:+g('cfg_dwShortWage')||350,internWage:+g('cfg_internWage')||100,fullShiftHours:+g('cfg_fullShiftHours')||8,shortShiftHours:+g('cfg_shortShiftHours')||5,shortThreshold:+g('cfg_shortThreshold')||6,otMultiplier:+g('cfg_otMultiplier')||1.5,lateRoundBlock:+g('cfg_lateRoundBlock')||15},teams:{bm:split(g('cfg_bmTeams')),dw:split(g('cfg_dwTeams')),internLabels:split(g('cfg_internLabels'))}};
+  saveConfig(cfg);
+  renderList();
+  toast(t('toastCfgSaved'));
+}
+
+function resetConfigUI(){
+  localStorage.removeItem(CONFIG_LS_KEY);
+  fetch('config.json').then(r=>{if(r.ok)return r.json();throw 0;}).then(j=>{CFG=j;applyConfig();renderList();toast(t('toastCfgReset'));}).catch(()=>{CFG=JSON.parse(JSON.stringify(DEFAULT_CFG));applyConfig();renderList();toast(t('toastCfgReset'));});
+}
+
+function exportConfigFile(){
+  const blob=new Blob([JSON.stringify(CFG,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='payroll_config.json';a.click();
+  toast(t('toastCfgExport'));
+}
+
+function importConfigFile(ev){
+  const file=ev.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const j=JSON.parse(e.target.result);
+      if(!j.payrollRates&&!j.teams)throw 0;
+      saveConfig(j);renderList();toast(t('toastCfgImport'));
+    }catch(err){toast(t('toastCfgImportErr'));}
+    ev.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ══════════════════════════════════════════
 //  PAYROLL ENGINE
 // ══════════════════════════════════════════
 const R={
@@ -712,7 +897,7 @@ const DW=new Set(['DW1','DW2','DW3','DWN','DWM']);
 const isBM=t=>BM.has(t);
 const isDW=t=>DW.has(t);
 const isIntern=t=>!BM.has(t)&&!DW.has(t);
-const ceil15=n=>n<=0?0:Math.ceil(n/15)*15;
+const ceil15=n=>n<=0?0:Math.ceil(n/R.BLOCK)*R.BLOCK;
 
 function parseT(v){
   if(!v&&v!==0)return null;
@@ -993,6 +1178,203 @@ function setAllCheckout(){
 function doCalc(){
   results=emps.map(e=>({e,r:calcWage(e)}));
   renderResults();renderSummary();
+}
+
+// ══════════════════════════════════════════
+//  PAYMENT CALCULATION (Day-of-Week Rules)
+// ══════════════════════════════════════════
+function doPaymentCalc(){
+  const dateVal=document.getElementById('cfgDate').value;
+  if(!dateVal){toast(t('payNoDate'));return;}
+  // Calculate wages first
+  results=emps.map(e=>({e,r:calcWage(e)}));
+  if(!results.length){toast(t('toastNoData'));return;}
+
+  const selDate=new Date(dateVal+'T00:00:00');
+  const dow=selDate.getDay(); // 0=Sun,1=Mon,...6=Sat
+
+  // Weekend: no payment cycle
+  if(dow===0||dow===6){
+    renderPaymentResult({type:'weekend',dateVal,dow});
+    sw('result',document.querySelectorAll('.tab')[1]);
+    return;
+  }
+
+  const bm1Emps=results.filter(({e})=>(e.team||'').trim()==='BM1');
+  const bm24Emps=results.filter(({e})=>{
+    const tm=(e.team||'').trim();
+    return ['BM2','BM3','BM4'].includes(tm);
+  });
+
+  if(dow===1){
+    // MONDAY: BM1 × 3 days (Sat+Sun+Mon)
+    const satDate=new Date(selDate);satDate.setDate(satDate.getDate()-2);
+    const sunDate=new Date(selDate);sunDate.setDate(sunDate.getDate()-1);
+    renderPaymentResult({
+      type:'monday',dateVal,dow,
+      bm1Emps,bm1Mult:3,
+      bm1Range:{from:satDate,to:selDate},
+    });
+  } else if(dow>=2&&dow<=4){
+    // TUE-THU: BM1 × 1 day
+    renderPaymentResult({
+      type:'tuethu',dateVal,dow,
+      bm1Emps,bm1Mult:1,
+      bm1Range:{from:selDate,to:selDate},
+    });
+  } else if(dow===5){
+    // FRIDAY: BM1 × 1 + BM2-4 × 7 days (last Wed → this Tue)
+    const tueDate=new Date(selDate);tueDate.setDate(tueDate.getDate()-3); // This Tue
+    const wedDate=new Date(tueDate);wedDate.setDate(wedDate.getDate()-6); // Last Wed
+    renderPaymentResult({
+      type:'friday',dateVal,dow,
+      bm1Emps,bm1Mult:1,
+      bm1Range:{from:selDate,to:selDate},
+      bm24Emps,bm24Mult:7,
+      bm24Range:{from:wedDate,to:tueDate},
+    });
+  }
+  sw('result',document.querySelectorAll('.tab')[1]);
+}
+
+function fmtShortDate(d){
+  const dd=d.getDate(),mm=d.getMonth()+1,yy=d.getFullYear();
+  return `${dd}/${mm}/${yy}`;
+}
+
+function renderPaymentResult(data){
+  const thead=document.getElementById('resThead');
+  const tbody=document.getElementById('resTbody');
+  const tfoot=document.getElementById('resTfoot');
+  document.getElementById('resDate').textContent=data.dateVal?fmtDate(data.dateVal):'';
+
+  // Day names for display
+  const dayNames={th:['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'],
+    en:['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'],
+    vi:['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy']};
+  const dayName=(dayNames[CUR_LANG]||dayNames.en)[data.dow];
+
+  if(data.type==='weekend'){
+    thead.innerHTML='';
+    tbody.innerHTML=`<tr><td colspan="11" style="padding:40px;text-align:center">
+      <div style="font-size:40px;margin-bottom:12px">📅</div>
+      <div style="font-size:15px;font-weight:700;margin-bottom:6px">${dayName}</div>
+      <div style="font-size:13px;color:var(--muted-fg)">${t('payWeekendInfo')}</div>
+    </td></tr>`;
+    tfoot.innerHTML='';
+    return;
+  }
+
+  // Build rule description
+  let ruleText='';
+  if(data.type==='monday') ruleText=t('payMonRule');
+  else if(data.type==='tuethu') ruleText=t('payTueThuRule');
+  else if(data.type==='friday') ruleText=t('payFriRule');
+
+  // Build header
+  const ks=['thNum','thName','thTeam','thBase','thLateM','thLateDed','thEarlyDed','thOT','thLeave','thDmg','thTotal'];
+  const aligns=['.c','','','r','r','r','r','r','r','r','r bold'];
+  thead.innerHTML=`<tr><td colspan="11" style="padding:14px 16px;background:linear-gradient(135deg,#7c3aed08,#3366FF08);border-bottom:2px solid var(--primary)">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <span style="font-size:20px">💳</span>
+      <span style="font-size:15px;font-weight:800">${t('payTitle')}</span>
+      <span class="badge" style="background:#f0e6ff;color:#7c3aed;margin-left:auto">${dayName}</span>
+    </div>
+    <div style="font-size:12px;color:var(--muted-fg);display:flex;gap:16px;flex-wrap:wrap">
+      <span>📌 ${ruleText}</span>
+    </div>
+  </td></tr>
+  <tr>${ks.map((k,i)=>`<th class="${aligns[i]}">${t(k)}</th>`).join('')}</tr>`;
+
+  let html='';
+  let grandTotal=0;
+  let rowIdx=0;
+
+  // ═══ BM1 SECTION ═══
+  if(data.bm1Emps&&data.bm1Emps.length){
+    const rangeStr=`${fmtShortDate(data.bm1Range.from)} → ${fmtShortDate(data.bm1Range.to)}`;
+    html+=`<tr><td colspan="11" style="padding:10px 14px;background:var(--bm-bg);font-weight:700;font-size:12px">
+      <span class="badge bm" style="margin-right:6px">BM1</span>
+      ${t('payBM1Section')} — <span style="font-weight:400">${rangeStr}</span>
+      <span class="badge" style="background:#dbeafe;color:#2563eb;margin-left:8px">×${data.bm1Mult} ${t('payDays')}</span>
+    </td></tr>`;
+
+    let bm1DayTotal=0;
+    data.bm1Emps.forEach(({e,r})=>{
+      rowIdx++;
+      const tc=tClass(e.team||'');
+      const dayWage=r.total;
+      const multiplied=dayWage*data.bm1Mult;
+      bm1DayTotal+=multiplied;
+      const isNeg=multiplied<0;
+      const totCls=isNeg?'c-neg bld mono':'c-pos bld mono';
+      const nm=`<div class="bld" style="font-size:13px">${esc(e.name||'—')}</div><div style="font-size:10px;color:var(--muted-fg)">${esc(e.nick||'')}</div>`;
+      const d=v=>v>0?`<span class="c-ded mono">${fmt(v)}</span>`:`<span class="c-mu">—</span>`;
+      const p=v=>v>0?`<span class="c-pos mono">${fmt(v)}</span>`:`<span class="c-mu">—</span>`;
+      const lateM=r.lateMinDed>0?`<span class="c-ded mono">${r.lateMinDed}</span>`:`<span class="c-mu">—</span>`;
+      html+=`<tr>
+<td class="c c-mu">${rowIdx}</td><td>${nm}</td>
+<td><span class="badge ${tc}">${e.team||'—'}</span></td>
+<td class="r mono">${fmt(r.W)}</td>
+<td class="r">${lateM}</td><td class="r">${d(r.lateDed)}</td><td class="r">${d(r.earlyDed)}</td>
+<td class="r">${p(r.otPay)}</td><td class="r">${d(r.leaveDed)}</td><td class="r">${d(r.damageDed)}</td>
+<td class="r ${totCls}" style="${isNeg?'background:#fff5f5':''}">${data.bm1Mult>1?`<span style="font-size:10px;color:var(--muted-fg)">${fmt(dayWage)}×${data.bm1Mult}=</span> `:'' }${fmt(multiplied)}</td>
+</tr>`;
+    });
+    grandTotal+=bm1DayTotal;
+    html+=`<tr style="background:var(--bm-bg)"><td colspan="10" class="r" style="font-weight:600;font-size:11px">${t('paySubtotal')} BM1 (×${data.bm1Mult})</td><td class="r bld mono" style="font-size:14px;color:var(--bm)">${fmt(bm1DayTotal)}</td></tr>`;
+  } else {
+    html+=`<tr><td colspan="11" style="padding:16px;text-align:center;color:var(--muted-fg);font-size:12px">${t('payNoBM1')}</td></tr>`;
+  }
+
+  // ═══ BM2-4 SECTION (Friday only) ═══
+  if(data.type==='friday'){
+    if(data.bm24Emps&&data.bm24Emps.length){
+      const rangeStr=`${fmtShortDate(data.bm24Range.from)} → ${fmtShortDate(data.bm24Range.to)}`;
+      html+=`<tr><td colspan="11" style="padding:10px 14px;background:#fff7ed;font-weight:700;font-size:12px;border-top:2px solid var(--border)">
+        <span class="badge" style="background:#fed7aa;color:#c2410c;margin-right:6px">BM2-4</span>
+        ${t('payBM24Section')} — <span style="font-weight:400">${rangeStr}</span>
+        <span class="badge" style="background:#ffedd5;color:#ea580c;margin-left:8px">×${data.bm24Mult} ${t('payDays')}</span>
+      </td></tr>`;
+
+      let bm24DayTotal=0;
+      data.bm24Emps.forEach(({e,r})=>{
+        rowIdx++;
+        const tc=tClass(e.team||'');
+        const dayWage=r.total;
+        const multiplied=dayWage*data.bm24Mult;
+        bm24DayTotal+=multiplied;
+        const isNeg=multiplied<0;
+        const totCls=isNeg?'c-neg bld mono':'c-pos bld mono';
+        const nm=`<div class="bld" style="font-size:13px">${esc(e.name||'—')}</div><div style="font-size:10px;color:var(--muted-fg)">${esc(e.nick||'')}</div>`;
+        const d=v=>v>0?`<span class="c-ded mono">${fmt(v)}</span>`:`<span class="c-mu">—</span>`;
+        const p=v=>v>0?`<span class="c-pos mono">${fmt(v)}</span>`:`<span class="c-mu">—</span>`;
+        const lateM=r.lateMinDed>0?`<span class="c-ded mono">${r.lateMinDed}</span>`:`<span class="c-mu">—</span>`;
+        html+=`<tr>
+<td class="c c-mu">${rowIdx}</td><td>${nm}</td>
+<td><span class="badge ${tc}">${e.team||'—'}</span></td>
+<td class="r mono">${fmt(r.W)}</td>
+<td class="r">${lateM}</td><td class="r">${d(r.lateDed)}</td><td class="r">${d(r.earlyDed)}</td>
+<td class="r">${p(r.otPay)}</td><td class="r">${d(r.leaveDed)}</td><td class="r">${d(r.damageDed)}</td>
+<td class="r ${totCls}" style="${isNeg?'background:#fff5f5':''}">${`<span style="font-size:10px;color:var(--muted-fg)">${fmt(dayWage)}×${data.bm24Mult}=</span> `}${fmt(multiplied)}</td>
+</tr>`;
+      });
+      grandTotal+=bm24DayTotal;
+      html+=`<tr style="background:#fff7ed"><td colspan="10" class="r" style="font-weight:600;font-size:11px">${t('paySubtotal')} BM2-4 (×${data.bm24Mult})</td><td class="r bld mono" style="font-size:14px;color:#ea580c">${fmt(bm24DayTotal)}</td></tr>`;
+    } else {
+      html+=`<tr><td colspan="11" style="padding:12px;text-align:center;color:var(--amber);font-size:12px;background:#fffbeb">${t('payNoBM24')}</td></tr>`;
+    }
+  }
+
+  tbody.innerHTML=html;
+
+  // Grand total footer
+  tfoot.innerHTML=`<tr class="tr-tot">
+<td colspan="10" style="font-size:14px">
+  <span style="font-size:16px;margin-right:6px">💵</span> ${t('payGrandTotal')}
+</td>
+<td class="r bld mono" style="font-size:18px;color:var(--green)">${fmt(grandTotal)}</td>
+</tr>`;
 }
 
 function renderResults(){
@@ -1449,6 +1831,7 @@ updateHdrSub();
 renderList();
 setLang('th');
 updateLoginLang();
+loadConfig();
 checkAuth();
 </script>
 </body>

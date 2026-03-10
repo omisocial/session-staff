@@ -1,0 +1,18 @@
+{
+  "payrollRates": {
+    "fullShiftWage": 500,
+    "bmShortWage": 400,
+    "dwShortWage": 350,
+    "internWage": 100,
+    "fullShiftHours": 8,
+    "shortShiftHours": 5,
+    "shortThreshold": 6,
+    "otMultiplier": 1.5,
+    "lateRoundBlock": 15
+  },
+  "teams": {
+    "bm": ["BM1", "BM2", "BM3", "BM4", "BMN", "BMM"],
+    "dw": ["DW1", "DW2", "DW3", "DWN", "DWM"],
+    "internLabels": ["ฝึกงาน BM", "นักศึกษาฝึกงาน"]
+  }
+}
