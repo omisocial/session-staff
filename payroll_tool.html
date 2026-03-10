@@ -237,6 +237,26 @@ textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(51,102,255,
 .small{font-size:11px;color:var(--muted-fg);}
 .div{height:1px;background:var(--border);margin:12px 0;}
 
+/* ── DAY SELECTOR ── */
+.day-bar{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:8px 12px;
+  display:none;gap:6px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.04);flex-wrap:wrap;align-items:center;}
+.day-bar.show{display:flex;}
+.day-pill{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border-radius:8px;
+  border:1px solid var(--border);background:var(--card);font-size:12px;font-weight:600;
+  cursor:pointer;transition:all .15s;font-family:inherit;color:var(--fg);white-space:nowrap;}
+.day-pill:hover{border-color:var(--primary);background:rgba(51,102,255,.04);}
+.day-pill.active{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 2px 8px rgba(51,102,255,.2);}
+.day-pill .pill-count{background:rgba(0,0,0,.1);border-radius:4px;padding:1px 5px;font-size:10px;font-weight:700;}
+.day-pill.active .pill-count{background:rgba(255,255,255,.25);}
+.day-pill-all{background:var(--muted);border-style:dashed;}
+.day-pill-add{border-style:dashed;color:var(--muted-fg);font-weight:500;}
+.day-pill-add:hover{color:var(--primary);border-color:var(--primary);}
+.date-fmt-badge{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;
+  font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;margin-left:auto;
+  background:#f0f4ff;color:#3366FF;border:1px solid #c7d7ff;}
+.date-fmt-badge:hover{background:#dbeafe;}
+.date-fmt-badge .fmt-swap{font-size:12px;}
+
 /* ══ LOGIN — BOXME SPLIT SCREEN ══ */
 .login-overlay{position:fixed;inset:0;z-index:9999;background:#fff;
   display:flex;opacity:1;transition:opacity .4s ease;}
@@ -459,6 +479,11 @@ textarea:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(51,102,255,
     </div>
   </div>
 
+  <!-- ═══ DAY SELECTOR ═══ -->
+  <div id="dayBar" class="day-bar">
+    <!-- populated by JS -->
+  </div>
+
   <!-- ═══ TABS ═══ -->
   <div class="tabs">
     <button class="tab on" onclick="sw('input',this)" data-i="tabInput">📝 บันทึกเวลา</button>
@@ -661,6 +686,11 @@ th:{
   payBM1Section:'💰 ค่าแรง BM1',payBM24Section:'💰 ค่าแรง BM2-4',
   payDays:'วัน',payMultiplier:'ตัวคูณ',paySubtotal:'ยอดรวมย่อย',
   payGrandTotal:'💵 ยอดจ่ายรวมทั้งหมด',payPeriod:'ช่วง',payPerDay:'ต่อวัน',payTotalDays:'รวมวัน',
+  dayAll:'📅 ทุกวัน',dayAddNew:'+ เพิ่มวัน',dayPeople:'คน',
+  fmtDDMM:'DD/MM',fmtMMDD:'MM/DD',fmtDetected:'ตรวจพบรูปแบบ',fmtSwitch:'🔄 สลับ',
+  toastMultiDay:'✅ นำเข้าสำเร็จ',toastMultiDayDays:'วัน',
+  sumMultiDay:'📅 สรุปหลายวัน',sumDateCol:'วันที่',
+  exportAllDays:'ส่งออกทุกวัน',exportThisDay:'ส่งออกวันนี้',
 },
 en:{
   appTitle:'Daily Payroll',
@@ -721,6 +751,11 @@ en:{
   payBM1Section:'💰 BM1 Wages',payBM24Section:'💰 BM2-4 Wages',
   payDays:'days',payMultiplier:'Multiplier',paySubtotal:'Subtotal',
   payGrandTotal:'💵 Grand Total Payment',payPeriod:'Period',payPerDay:'per day',payTotalDays:'total days',
+  dayAll:'📅 All Days',dayAddNew:'+ Add Day',dayPeople:'ppl',
+  fmtDDMM:'DD/MM',fmtMMDD:'MM/DD',fmtDetected:'Format detected',fmtSwitch:'🔄 Switch',
+  toastMultiDay:'✅ Imported',toastMultiDayDays:'days',
+  sumMultiDay:'📅 Multi-Day Summary',sumDateCol:'Date',
+  exportAllDays:'Export All Days',exportThisDay:'Export This Day',
 },
 vi:{
   appTitle:'Tính Lương Ngày',
@@ -781,6 +816,11 @@ vi:{
   payBM1Section:'💰 Lương BM1',payBM24Section:'💰 Lương BM2-4',
   payDays:'ngày',payMultiplier:'Hệ số nhân',paySubtotal:'Tạm tính',
   payGrandTotal:'💵 Tổng thanh toán',payPeriod:'Kỳ',payPerDay:'mỗi ngày',payTotalDays:'tổng ngày',
+  dayAll:'📅 Tất cả',dayAddNew:'+ Thêm ngày',dayPeople:'người',
+  fmtDDMM:'DD/MM',fmtMMDD:'MM/DD',fmtDetected:'Định dạng phát hiện',fmtSwitch:'🔄 Đổi',
+  toastMultiDay:'✅ Nhập thành công',toastMultiDayDays:'ngày',
+  sumMultiDay:'📅 Tổng hợp nhiều ngày',sumDateCol:'Ngày',
+  exportAllDays:'Xuất tất cả ngày',exportThisDay:'Xuất ngày này',
 }};
 
 let CUR_LANG='th';
@@ -942,12 +982,159 @@ function calcWage(emp){
 }
 
 // ══════════════════════════════════════════
-//  APP STATE
+//  SMART DATE PARSER (auto MM/DD vs DD/MM)
 // ══════════════════════════════════════════
-let emps=[],uid=1,results=[];
-const TEAMS=['BM1','BM2','BM3','BM4','BMN','BMM','DW1','DW2','DW3','DWN','DWM','ฝึกงาน BM','นักศึกษาฝึกงาน'];
-const tClass=t=>BM.has(t)?'bm':DW.has(t)?'dw':'intern';
-function fmt(v,d=2){if(v==null)return'—';return(+v).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+const SmartDate = {
+  // Locale default: TH/VI → DD/MM, EN → MM/DD
+  _forceFmt: null, // null = auto, 'dmy' or 'mdy'
+  getLocaleFmt() {
+    if (this._forceFmt) return this._forceFmt;
+    return (CUR_LANG === 'en') ? 'mdy' : 'dmy';
+  },
+  toggleFmt() {
+    const cur = this._forceFmt || this.getLocaleFmt();
+    this._forceFmt = (cur === 'dmy') ? 'mdy' : 'dmy';
+    renderDayBar();
+  },
+  // Detect format from a batch of date strings
+  detectFormat(dateStrs) {
+    let hasBigFirst = false, hasBigSecond = false;
+    dateStrs.forEach(s => {
+      const m = String(s).match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+      if (!m) return;
+      const a = +m[1], b = +m[2];
+      if (a > 12) hasBigFirst = true;  // first part > 12 → must be day → DD/MM
+      if (b > 12) hasBigSecond = true; // second part > 12 → must be day → MM/DD
+    });
+    if (hasBigFirst && !hasBigSecond) { this._forceFmt = 'dmy'; return 'dmy'; }
+    if (hasBigSecond && !hasBigFirst) { this._forceFmt = 'mdy'; return 'mdy'; }
+    // Ambiguous → use locale default
+    return this.getLocaleFmt();
+  },
+  // Parse a date string → 'YYYY-MM-DD' or null
+  parseDate(s, fmt) {
+    if (!s) return null;
+    s = String(s).trim();
+    // Try YYYY-MM-DD or YYYY/MM/DD first (ISO)
+    let m = s.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+    if (m) {
+      const y = +m[1], mo = +m[2], d = +m[3];
+      if (y > 1900 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31)
+        return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+    // Try D/M/Y or M/D/Y
+    m = s.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if (m) {
+      let a = +m[1], b = +m[2], y = +m[3];
+      if (y < 100) y += 2000;
+      // Buddhist year correction (e.g. 2569 → 2026)
+      if (y > 2500) y -= 543;
+      const f = fmt || this.getLocaleFmt();
+      let mo, d;
+      if (f === 'dmy') { d = a; mo = b; }
+      else { mo = a; d = b; }
+      if (mo >= 1 && mo <= 12 && d >= 1 && d <= 31)
+        return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    }
+    return null;
+  },
+  // Extract time from string → {h,m} or null (reuse parseT logic)
+  parseTime(s) { return parseT(s); },
+  // Combined: from "3/1/2026 9:00" → {date: '2026-03-01', time: {h:9,m:0}}
+  parseFull(s, fmt) {
+    return { date: this.parseDate(s, fmt), time: this.parseTime(s) };
+  }
+};
+
+// ══════════════════════════════════════════
+//  APP STATE — Multi-Day Model
+// ══════════════════════════════════════════
+let dayMap = {};        // { 'YYYY-MM-DD': { shift: {start:'09:00',end:'18:00'}, emps: [...] } }
+let activeDate = null;  // Currently selected day key, or null for "all days"
+let uid = 1, results = [];
+const TEAMS = ['BM1','BM2','BM3','BM4','BMN','BMM','DW1','DW2','DW3','DWN','DWM','ฝึกงาน BM','นักศึกษาฝึกงาน'];
+const tClass = t => BM.has(t) ? 'bm' : DW.has(t) ? 'dw' : 'intern';
+function fmt(v, d = 2) { if (v == null) return '—'; return (+v).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+// Backward-compat accessor: get current day's employees (or all)
+function getEmps() {
+  if (activeDate && dayMap[activeDate]) return dayMap[activeDate].emps;
+  // Flatten all days
+  return Object.values(dayMap).flatMap(d => d.emps);
+}
+
+// Get all dates sorted
+function getDates() { return Object.keys(dayMap).sort(); }
+
+// Ensure a day entry exists  
+function ensureDay(dateKey) {
+  if (!dayMap[dateKey]) {
+    const s = document.getElementById('cfgStart').value || '09:00';
+    const e = document.getElementById('cfgEnd').value || '18:00';
+    dayMap[dateKey] = { shift: { start: s, end: e }, emps: [] };
+  }
+  return dayMap[dateKey];
+}
+
+// Add emp to a specific day
+function addEmpToDay(dateKey, data) {
+  const day = ensureDay(dateKey);
+  day.emps.push({ id: uid++, ...data });
+}
+
+// Switch active date
+function switchDay(dateKey) {
+  activeDate = dateKey;
+  // If switching to a specific day, sync cfgDate and shift inputs  
+  if (dateKey && dayMap[dateKey]) {
+    document.getElementById('cfgDate').value = dateKey;
+    document.getElementById('cfgStart').value = dayMap[dateKey].shift.start;
+    document.getElementById('cfgEnd').value = dayMap[dateKey].shift.end;
+  }
+  renderDayBar();
+  renderList();
+  updateHdrSub();
+  if (results.length) { results = []; renderEmptyResults(); }
+}
+
+function renderEmptyResults() {
+  const thead = document.getElementById('resThead');
+  const tbody = document.getElementById('resTbody');
+  const tfoot = document.getElementById('resTfoot');
+  thead.innerHTML = ''; tfoot.innerHTML = '';
+  tbody.innerHTML = `<tr><td colspan="11" class="empty-state" style="padding:28px">${t('tblEmpty')}</td></tr>`;
+}
+
+// Render the day selector bar
+function renderDayBar() {
+  const bar = document.getElementById('dayBar');
+  const dates = getDates();
+  if (dates.length <= 1) { bar.classList.remove('show'); return; }
+  bar.classList.add('show');
+  let html = '';
+  // "All days" pill
+  html += `<button class="day-pill day-pill-all${activeDate === null ? ' active' : ''}" onclick="switchDay(null)">${t('dayAll')} <span class="pill-count">${Object.values(dayMap).reduce((s, d) => s + d.emps.length, 0)}</span></button>`;
+  // Individual day pills
+  dates.forEach(dk => {
+    const cnt = dayMap[dk].emps.length;
+    const label = fmtDateShort(dk);
+    html += `<button class="day-pill${activeDate === dk ? ' active' : ''}" onclick="switchDay('${dk}')">${label} <span class="pill-count">${cnt} ${t('dayPeople')}</span></button>`;
+  });
+  // Format badge
+  const curFmt = SmartDate._forceFmt || SmartDate.getLocaleFmt();
+  const fmtLabel = curFmt === 'dmy' ? t('fmtDDMM') : t('fmtMMDD');
+  html += `<button class="date-fmt-badge" onclick="SmartDate.toggleFmt()" title="${t('fmtSwitch')}">${t('fmtDetected')}: ${fmtLabel} <span class="fmt-swap">⇄</span></button>`;
+  bar.innerHTML = html;
+}
+
+function fmtDateShort(dateKey) {
+  if (!dateKey) return '';
+  const d = new Date(dateKey + 'T00:00:00');
+  const mo = d.getMonth();
+  if (CUR_LANG === 'en') return `${EN_MO[mo]} ${d.getDate()}`;
+  if (CUR_LANG === 'vi') return `${d.getDate()} ${VI_MO[mo]}`;
+  return `${d.getDate()} ${THAI_MO[mo]}`;
+}
 
 // ══════════════════════════════════════════
 //  SMART DATE / TIME HELPERS
@@ -1032,6 +1219,7 @@ function pickTime(id,type,val){
 
 // Live preview in card header
 function livePreview(id){
+  const emps=getEmps();
   const emp=emps.find(e=>e.id===id);
   if(!emp)return;
   const r=calcWage(emp);
@@ -1061,6 +1249,7 @@ function livePreview(id){
 function esc(s){return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
 function renderList(){
+  const emps=getEmps();
   const el=document.getElementById('empList');
   document.getElementById('emptyState').style.display=emps.length?'none':'';
   document.getElementById('bulkBar').style.display=emps.length?'flex':'none';
@@ -1153,21 +1342,45 @@ function toggleEmp(id){
   const card=document.getElementById(`ec${id}`);
   if(card)card.classList.toggle('open');
 }
-function upd(id,k,v){const e=emps.find(x=>x.id===id);if(e)e[k]=v;}
+function upd(id,k,v){
+  // Search across all days
+  for(const dk of Object.keys(dayMap)){
+    const e=dayMap[dk].emps.find(x=>x.id===id);
+    if(e){e[k]=v;return;}
+  }
+}
 function updHdr(id){
+  const emps=getEmps();
   const e=emps.find(x=>x.id===id);if(!e)return;
   const nm=document.getElementById(`en${id}`);
   const bt=document.getElementById(`et${id}`);
   if(nm)nm.textContent=(e.name||'—')+(e.nick?` (${e.nick})`:'');
   if(bt){bt.textContent=e.team||'?';bt.className='badge '+tClass(e.team||'');}
 }
-function addEmp(data={}){emps.push({id:uid++,...data});renderList();}
-function delEmp(id){emps=emps.filter(e=>e.id!==id);renderList();}
+function addEmp(data={}){
+  // Add to current active day, fallback to cfgDate
+  const dk = activeDate || document.getElementById('cfgDate').value || new Date().toISOString().slice(0,10);
+  ensureDay(dk);
+  dayMap[dk].emps.push({id:uid++,...data});
+  if(!activeDate && getDates().length===1) activeDate=dk;
+  renderDayBar();
+  renderList();
+}
+function delEmp(id){
+  for(const dk of Object.keys(dayMap)){
+    dayMap[dk].emps=dayMap[dk].emps.filter(e=>e.id!==id);
+    // Remove empty day entries
+    if(dayMap[dk].emps.length===0) delete dayMap[dk];
+  }
+  if(activeDate && !dayMap[activeDate]) activeDate=getDates()[0]||null;
+  renderDayBar();
+  renderList();
+}
 function collapseAll(){document.querySelectorAll('.emp').forEach(el=>el.classList.remove('open'));}
 function setAllCheckout(){
   const v=document.getElementById('cfgEnd').value;
   if(!v)return;
-  emps.forEach(e=>{e.checkout=v;});
+  getEmps().forEach(e=>{e.checkout=v;});
   renderList();
   toast(`✅ ${v}`);
 }
@@ -1176,6 +1389,11 @@ function setAllCheckout(){
 //  CALCULATE & RENDER
 // ══════════════════════════════════════════
 function doCalc(){
+  // Tag each emp with its date for multi-day export
+  for(const [dk,day] of Object.entries(dayMap)){
+    day.emps.forEach(e=>{ e._date=dk; });
+  }
+  const emps=getEmps();
   results=emps.map(e=>({e,r:calcWage(e)}));
   renderResults();renderSummary();
 }
@@ -1187,6 +1405,10 @@ function doPaymentCalc(){
   const dateVal=document.getElementById('cfgDate').value;
   if(!dateVal){toast(t('payNoDate'));return;}
   // Calculate wages first
+  for(const [dk,day] of Object.entries(dayMap)){
+    day.emps.forEach(e=>{ e._date=dk; });
+  }
+  const emps=getEmps();
   results=emps.map(e=>({e,r:calcWage(e)}));
   if(!results.length){toast(t('toastNoData'));return;}
 
@@ -1498,9 +1720,22 @@ function applyPreset(){
 }
 function onShiftChange(){
   document.getElementById('cfgPreset').value='';
+  // Sync shift to active day
+  if(activeDate && dayMap[activeDate]){
+    dayMap[activeDate].shift.start=document.getElementById('cfgStart').value||'09:00';
+    dayMap[activeDate].shift.end=document.getElementById('cfgEnd').value||'18:00';
+  }
   updateHdrSub();
 }
-function onDateChange(){updateHdrSub();}
+function onDateChange(){
+  const newDate=document.getElementById('cfgDate').value;
+  if(newDate && dayMap[newDate]){
+    switchDay(newDate);
+  } else {
+    activeDate=newDate||null;
+    updateHdrSub();
+  }
+}
 function updateHdrSub(){
   const d=document.getElementById('cfgDate').value;
   const s=document.getElementById('cfgStart').value;
@@ -1526,19 +1761,47 @@ function doPaste(){
   const txt=document.getElementById('pasteArea').value.trim();
   if(!txt){hidePaste();return;}
   const lines=txt.split('\n').filter(l=>l.trim());
-  let n=0;
+  // First pass: collect all checkin strings for date detection
+  const checkinStrs=[];
+  const parsed=[];
   lines.forEach(line=>{
     const cols=line.split('\t').map(c=>c.trim());
     if(cols.length<2)return;
     const off=(!isNaN(parseInt(cols[0]))&&cols.length>3)?1:0;
     const name=cols[off]||'';
     if(!name||name==='ชื่อ-นามสกุล'||name==='Full Name'||name==='Họ và tên')return;
-    addEmp({name,checkin:cols[off+1]||'',checkout:cols[off+2]||'',team:cols[off+3]||'',nick:cols[off+4]||'',remarks:cols[off+5]||''});
+    const ci=cols[off+1]||'';
+    checkinStrs.push(ci);
+    parsed.push({name,checkin:ci,checkout:cols[off+2]||'',team:cols[off+3]||'',nick:cols[off+4]||'',remarks:cols[off+5]||''});
+  });
+  // Auto-detect date format from batch
+  const detFmt=SmartDate.detectFormat(checkinStrs);
+  // Second pass: group by date
+  const fallbackDate=activeDate||document.getElementById('cfgDate').value||new Date().toISOString().slice(0,10);
+  let n=0;
+  const dateSet=new Set();
+  parsed.forEach(emp=>{
+    const dk=SmartDate.parseDate(emp.checkin,detFmt)||fallbackDate;
+    dateSet.add(dk);
+    addEmpToDay(dk,emp);
     n++;
   });
+  // Auto-switch to first imported date
+  const importedDates=[...dateSet].sort();
+  if(importedDates.length>0){
+    activeDate=importedDates[0];
+    document.getElementById('cfgDate').value=activeDate;
+  }
+  renderDayBar();
+  renderList();
+  updateHdrSub();
   document.getElementById('pasteArea').value='';
   hidePaste();
-  toast(n>0?`${t('toastImport')} ${n}`:t('toastNoData'));
+  if(n>0 && importedDates.length>1){
+    toast(`${t('toastMultiDay')} ${n} — ${importedDates.length} ${t('toastMultiDayDays')}`);
+  } else {
+    toast(n>0?`${t('toastImport')} ${n}`:t('toastNoData'));
+  }
 }
 
 // ══════════════════════════════════════════
@@ -1548,6 +1811,9 @@ function loadSample(){
   document.getElementById('cfgDate').value='2026-03-01';
   document.getElementById('cfgPreset').value='09:00|18:00';
   applyPreset();
+  const dk1='2026-03-01';
+  ensureDay(dk1);
+  dayMap[dk1].shift={start:'09:00',end:'18:00'};
   [
     {name:'อรพรรณ แสงจำปี',   checkin:'3/1/2026 9:37', checkout:'18:00',team:'BM1',nick:'ออร์'},
     {name:'อธิบดี วัสสุวรรณ',  checkin:'3/1/2026 9:18', checkout:'18:00',team:'BM1',nick:'ฟรี'},
@@ -1559,7 +1825,11 @@ function loadSample(){
     {name:'กาญจนา วิสุทธิพงศ์',checkin:'3/1/2026 8:55',checkout:'18:00',team:'BM1',nick:'แม่บ้านเก๋'},
     {name:'นิชากร กรุดบาง',    checkin:'3/1/2026 8:55', checkout:'18:00',team:'BM1',nick:'ครีม'},
     {name:'คุณวุฒิ เรืองพงษ์', checkin:'3/1/2026 8:54', checkout:'18:00',team:'BM1',nick:'ป๋อ'},
-  ].forEach(d=>addEmp(d));
+  ].forEach(d=>addEmpToDay(dk1,d));
+  activeDate=dk1;
+  renderDayBar();
+  renderList();
+  updateHdrSub();
   toast(t('toastSample'));
 }
 
@@ -1570,11 +1840,14 @@ function doExport(){
   if(!results.length)doCalc();
   if(!results.length){toast(t('toastNoData'));return;}
   const d=document.getElementById('cfgDate').value||'export';
-  const hdr=[t('thNum'),t('thName'),t('fldNick'),t('thTeam'),t('thBase'),'Q',
+  const dates=getDates();
+  const multiDay=dates.length>1 && !activeDate;
+  const hdr=[...(multiDay?[t('sumDateCol')]:[]),t('thNum'),t('thName'),t('fldNick'),t('thTeam'),t('thBase'),'Q',
     t('thLateM'),'Rounded Late(m)',t('thLateDed'),
     'Early(m)',t('thEarlyDed'),'OT(hrs)',t('thOT'),
     t('thLeave'),t('thDmg'),t('thTotal')];
   const rows=results.map(({e,r},i)=>[
+    ...(multiDay?[e._date||d]:[]),
     i+1,e.name||'',e.nick||'',e.team||'',r.W,r.Q,
     r.lateMin,r.lateMinDed,(r.lateDed||0).toFixed(4),
     r.earlyMin,(r.earlyDed||0).toFixed(4),
@@ -1605,40 +1878,64 @@ function handleImportXlsx(ev){
       const wb=XLSX.read(e.target.result,{type:'array'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1});
-      let n=0;
       // Auto-detect header row
       let startRow=0;
       for(let i=0;i<Math.min(rows.length,5);i++){
         const fc=String(rows[i]&&rows[i][0]||'').trim().toLowerCase();
         if(['ลำดับ','#','no','seq','stt','no.'].includes(fc)){startRow=i+1;break;}
       }
+      // First pass: collect checkin values for date detection
+      const checkinStrs=[];
+      const parsedRows=[];
+      const parseXVal=(v)=>{
+        if(v==null)return '';
+        if(typeof v==='number'){
+          if(v<1){const totalMin=Math.round(v*24*60);const h=Math.floor(totalMin/60),m=totalMin%60;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');}
+          const d=XLSX.SSF.parse_date_code(v);
+          if(d){
+            // Return full date+time string for date extraction
+            return `${d.m||1}/${d.d||1}/${d.y||2026} ${String(d.H||0).padStart(2,'0')}:${String(d.M||0).padStart(2,'0')}`;
+          }
+        }
+        return String(v).trim();
+      };
       for(let i=startRow;i<rows.length;i++){
         const cols=rows[i];
         if(!cols||cols.length<2)continue;
         const off=(!isNaN(parseInt(cols[0]))&&cols.length>3)?1:0;
         const name=String(cols[off]||'').trim();
         if(!name||name==='ชื่อ-นามสกุล'||name==='Full Name'||name==='Họ và tên')continue;
-        const parseXVal=(v)=>{
-          if(v==null)return '';
-          if(typeof v==='number'){
-            // Excel serial date/time number
-            if(v<1){// pure time fraction
-              const totalMin=Math.round(v*24*60);
-              const h=Math.floor(totalMin/60),m=totalMin%60;
-              return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
-            }
-            const d=XLSX.SSF.parse_date_code(v);
-            if(d){return String(d.H||0).padStart(2,'0')+':'+String(d.M||0).padStart(2,'0');}
-          }
-          return String(v).trim();
-        };
-        addEmp({name,checkin:parseXVal(cols[off+1]),checkout:parseXVal(cols[off+2]),
+        const ci=parseXVal(cols[off+1]);
+        checkinStrs.push(ci);
+        parsedRows.push({name,checkin:ci,checkout:parseXVal(cols[off+2]),
           team:String(cols[off+3]||'').trim(),nick:String(cols[off+4]||'').trim(),
           remarks:String(cols[off+5]||'').trim()});
-        n++;
       }
+      // Detect date format
+      const detFmt=SmartDate.detectFormat(checkinStrs);
+      const fallbackDate=activeDate||document.getElementById('cfgDate').value||new Date().toISOString().slice(0,10);
+      let n=0;
+      const dateSet=new Set();
+      parsedRows.forEach(emp=>{
+        const dk=SmartDate.parseDate(emp.checkin,detFmt)||fallbackDate;
+        dateSet.add(dk);
+        addEmpToDay(dk,emp);
+        n++;
+      });
+      const importedDates=[...dateSet].sort();
+      if(importedDates.length>0){
+        activeDate=importedDates[0];
+        document.getElementById('cfgDate').value=activeDate;
+      }
+      renderDayBar();
+      renderList();
+      updateHdrSub();
       ev.target.value='';
-      toast(n>0?`${t('toastXlsxImport')} ${n}`:t('toastXlsxNoData'));
+      if(n>0 && importedDates.length>1){
+        toast(`${t('toastXlsxImport')} ${n} — ${importedDates.length} ${t('toastMultiDayDays')}`);
+      } else {
+        toast(n>0?`${t('toastXlsxImport')} ${n}`:t('toastXlsxNoData'));
+      }
     }catch(err){
       console.error('Excel import error:',err);
       toast(t('toastXlsxError'));
@@ -1652,13 +1949,16 @@ function doExportXlsx(){
   if(!results.length)doCalc();
   if(!results.length){toast(t('toastNoData'));return;}
   const d=document.getElementById('cfgDate').value||'export';
-  const hdr=[t('thNum'),t('thName'),t('fldNick'),t('thTeam'),t('thBase'),'Q',
+  const dates=getDates();
+  const multiDay=dates.length>1 && !activeDate;
+  const hdr=[...(multiDay?[t('sumDateCol')]:[]),t('thNum'),t('thName'),t('fldNick'),t('thTeam'),t('thBase'),'Q',
     t('thLateM'),'Rounded Late(m)',t('thLateDed'),
     'Early(m)',t('thEarlyDed'),'OT(hrs)',t('thOT'),
     t('thLeave'),t('thDmg'),t('thTotal')];
   const data=[hdr];
   results.forEach(({e,r},i)=>{
     data.push([
+      ...(multiDay?[e._date||d]:[]),
       i+1,e.name||'',e.nick||'',e.team||'',r.W,r.Q,
       r.lateMin,r.lateMinDed,+(r.lateDed||0).toFixed(4),
       r.earlyMin,+(r.earlyDed||0).toFixed(4),
@@ -1669,6 +1969,7 @@ function doExportXlsx(){
   });
   const ws=XLSX.utils.aoa_to_sheet(data);
   ws['!cols']=[
+    ...(multiDay?[{wch:12}]:[]),
     {wch:4},{wch:24},{wch:12},{wch:8},{wch:8},{wch:4},
     {wch:8},{wch:12},{wch:10},{wch:8},{wch:10},
     {wch:8},{wch:10},{wch:10},{wch:10},{wch:12}
