@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
+<title>Payroll · คำนวณค่าแรง · Tính Lương</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f8fafc;--card:#fff;--border:#e2e8f0;--ring:#0f172a;
+  --fg:#0f172a;--muted:#f1f5f9;--muted-fg:#64748b;
+  --primary:#0f172a;--primary-fg:#f8fafc;
+  --bm:#1d4ed8;--bm-bg:#dbeafe;--bm-brd:#93c5fd;
+  --dw:#065f46;--dw-bg:#d1fae5;--dw-brd:#6ee7b7;
+  --red:#dc2626;--red-bg:#fee2e2;
+  --amber:#b45309;--amber-bg:#fef3c7;
+  --green:#166534;--green-bg:#dcfce7;
+  --r:8px;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans Thai',sans-serif;
+  background:var(--bg);color:var(--fg);font-size:14px;line-height:1.5;min-height:100vh;}
+
+/* ── HEADER ── */
+.hdr{position:sticky;top:0;z-index:100;background:var(--card);border-bottom:1px solid var(--border);
+  padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.hdr-l{display:flex;align-items:center;gap:9px;min-width:0;}
+.hdr-ico{width:32px;height:32px;background:var(--primary);border-radius:8px;
+  display:grid;place-items:center;font-size:15px;flex-shrink:0;}
+.hdr-title{font-size:15px;font-weight:700;}
+.hdr-sub{font-size:11px;color:var(--muted-fg);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px;}
+.hdr-r{display:flex;gap:5px;flex-shrink:0;align-items:center;}
+
+/* Language switcher */
+.lang-sw{display:flex;background:var(--muted);border-radius:6px;padding:2px;gap:1px;}
+.lang-btn{height:24px;padding:0 7px;border:none;background:transparent;border-radius:4px;
+  font-size:11px;font-weight:600;cursor:pointer;color:var(--muted-fg);transition:all .15s;font-family:inherit;}
+.lang-btn.on{background:var(--card);color:var(--fg);box-shadow:0 1px 3px rgba(0,0,0,.12);}
+
+/* ── LAYOUT ── */
+.wrap{max-width:860px;margin:0 auto;padding:12px 12px 100px;}
+
+/* ── CARD ── */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);margin-bottom:10px;overflow:hidden;}
+.card-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:13px;font-weight:600;}
+.card-body{padding:14px;}
+
+/* ── FORM ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+@media(max-width:480px){.g2{grid-template-columns:1fr;}}
+@media(max-width:360px){.g3{grid-template-columns:1fr 1fr;}}
+.fg{display:flex;flex-direction:column;gap:4px;position:relative;}
+.fg label{font-size:11px;font-weight:600;color:var(--muted-fg);text-transform:uppercase;letter-spacing:.4px;}
+.s2{grid-column:1/-1;}
+input,select{height:38px;padding:0 10px;border:1px solid var(--border);border-radius:6px;
+  font-size:13px;color:var(--fg);background:var(--card);outline:none;width:100%;font-family:inherit;
+  transition:border-color .15s,box-shadow .15s;}
+input:focus,select:focus{border-color:var(--ring);box-shadow:0 0 0 3px rgba(15,23,42,.07);}
+select{cursor:pointer;}
+
+/* Date row with today button */
+.date-row{display:flex;gap:6px;align-items:flex-end;}
+.date-row input{flex:1;}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:5px;
+  height:36px;padding:0 14px;border-radius:6px;font-size:13px;font-weight:500;
+  cursor:pointer;border:1px solid transparent;transition:all .15s;font-family:inherit;white-space:nowrap;}
+.btn-p{background:var(--primary);color:var(--primary-fg);}
+.btn-p:hover{opacity:.88;}
+.btn-o{background:transparent;color:var(--fg);border-color:var(--border);}
+.btn-o:hover{background:var(--muted);}
+.btn-g{background:transparent;color:var(--muted-fg);border:none;}
+.btn-g:hover{background:var(--muted);color:var(--fg);}
+.btn-s{height:30px;padding:0 10px;font-size:12px;}
+.btn-xs{height:26px;padding:0 8px;font-size:11px;}
+.btn-today{height:38px;padding:0 12px;font-size:12px;font-weight:600;
+  background:var(--muted);border:1px solid var(--border);border-radius:6px;
+  cursor:pointer;white-space:nowrap;color:var(--fg);font-family:inherit;flex-shrink:0;
+  transition:background .15s;}
+.btn-today:hover{background:#e2e8f0;}
+
+/* ── TABS ── */
+.tabs{background:var(--muted);border-radius:var(--r);padding:3px;display:flex;gap:2px;margin-bottom:12px;}
+.tab{flex:1;height:34px;border:none;background:transparent;border-radius:6px;
+  font-size:12px;font-weight:600;color:var(--muted-fg);cursor:pointer;transition:all .15s;font-family:inherit;padding:0 4px;}
+.tab.on{background:var(--card);color:var(--fg);box-shadow:0 1px 4px rgba(0,0,0,.1);}
+.pane{display:none;}.pane.on{display:block;}
+
+/* ── BADGE ── */
+.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:999px;
+  font-size:10px;font-weight:700;letter-spacing:.3px;}
+.bm{background:var(--bm-bg);color:var(--bm);}
+.dw{background:var(--dw-bg);color:var(--dw);}
+.intern{background:var(--muted);color:var(--muted-fg);}
+.badge-red{background:var(--red-bg);color:var(--red);}
+.badge-amb{background:var(--amber-bg);color:var(--amber);}
+.badge-grn{background:var(--green-bg);color:var(--green);}
+
+/* ── EMPLOYEE CARD ── */
+.emp{border:1px solid var(--border);border-radius:var(--r);margin-bottom:8px;overflow:visible;}
+.emp-hdr{background:var(--muted);padding:9px 12px;display:flex;align-items:center;gap:8px;
+  cursor:pointer;user-select:none;-webkit-user-select:none;border-radius:var(--r);}
+.emp.open .emp-hdr{border-radius:var(--r) var(--r) 0 0;}
+.emp-num{width:22px;height:22px;border-radius:50%;background:var(--primary);color:#fff;
+  font-size:11px;font-weight:700;display:grid;place-items:center;flex-shrink:0;}
+.emp-nm{font-size:13px;font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.emp-preview{font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;flex-shrink:0;}
+.emp-chev{font-size:10px;color:var(--muted-fg);transition:transform .2s;flex-shrink:0;margin-left:2px;}
+.emp.open .emp-chev{transform:rotate(180deg);}
+.emp-body{display:none;padding:12px;border-top:1px solid var(--border);}
+.emp.open .emp-body{display:block;}
+.emp-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+@media(max-width:400px){.emp-fields{grid-template-columns:1fr;}}
+
+/* ── TIME CHIPS ── */
+.chips-wrap{display:none;flex-wrap:wrap;gap:5px;padding:5px 0 2px;}
+.chips-wrap.show{display:flex;}
+.chip{height:26px;padding:0 9px;border:1px solid var(--border);border-radius:5px;
+  background:var(--card);font-size:11px;font-weight:600;color:var(--fg);cursor:pointer;
+  white-space:nowrap;transition:all .12s;font-family:inherit;}
+.chip:hover{background:var(--primary);color:#fff;border-color:var(--primary);}
+.chip.late{border-color:var(--amber-bg);color:var(--amber);background:var(--amber-bg);}
+.chip.late:hover{background:var(--amber);color:#fff;}
+.chip.early{border-color:var(--red-bg);color:var(--red);background:var(--red-bg);}
+.chip.early:hover{background:var(--red);color:#fff;}
+.chip.ot{border-color:var(--green-bg);color:var(--green);background:var(--green-bg);}
+.chip.ot:hover{background:var(--green);color:#fff;}
+
+/* Bulk actions bar */
+.bulk-bar{display:flex;gap:6px;flex-wrap:wrap;padding:8px 0;margin-bottom:4px;}
+
+/* ── RESULTS TABLE ── */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:560px;}
+th{background:var(--muted);padding:8px 9px;text-align:left;font-size:11px;font-weight:700;
+  color:var(--muted-fg);white-space:nowrap;border-bottom:1px solid var(--border);}
+td{padding:7px 9px;border-bottom:1px solid #f1f5f9;vertical-align:middle;}
+tr:hover td{background:#fafafa;}
+.tr-tot td{background:var(--muted)!important;border-top:2px solid var(--border);font-weight:700;}
+.r{text-align:right;}.c{text-align:center;}
+.mono{font-variant-numeric:tabular-nums;}
+.c-pos{color:var(--green);}.c-neg{color:var(--red);}.c-ded{color:var(--amber);}.c-mu{color:var(--muted-fg);}
+.bld{font-weight:700;}
+
+/* ── STAT CARDS ── */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px;}
+@media(min-width:480px){.stats{grid-template-columns:repeat(4,1fr);}}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:12px;}
+.stat-lbl{font-size:10px;font-weight:600;color:var(--muted-fg);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;}
+.stat-val{font-size:21px;font-weight:800;line-height:1.1;}
+.stat-sub{font-size:10px;color:var(--muted-fg);margin-top:2px;}
+
+/* ── FAB ── */
+.fab{position:fixed;bottom:20px;right:16px;width:52px;height:52px;border-radius:50%;
+  background:var(--primary);color:#fff;border:none;font-size:20px;cursor:pointer;
+  box-shadow:0 4px 16px rgba(0,0,0,.28);display:grid;place-items:center;z-index:90;
+  transition:transform .15s;}
+.fab:active{transform:scale(.95);}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:200;
+  display:flex;align-items:flex-end;justify-content:center;}
+.overlay.hidden{display:none;}
+.modal{background:var(--card);border-radius:16px 16px 0 0;width:100%;max-width:600px;
+  max-height:88vh;overflow-y:auto;padding:20px 16px 28px;}
+.modal-title{font-size:16px;font-weight:700;margin-bottom:3px;}
+.modal-sub{font-size:12px;color:var(--muted-fg);margin-bottom:14px;line-height:1.7;}
+textarea{width:100%;height:136px;padding:10px;border:1px solid var(--border);border-radius:6px;
+  font-size:12px;font-family:'Courier New',monospace;resize:vertical;outline:none;transition:border-color .15s;}
+textarea:focus{border-color:var(--ring);}
+
+/* ── EMPTY ── */
+.empty-state{text-align:center;padding:36px 16px;color:var(--muted-fg);}
+.es-icon{font-size:36px;margin-bottom:10px;}
+.es-title{font-size:14px;font-weight:600;margin-bottom:4px;color:var(--fg);}
+.es-sub{font-size:12px;margin-bottom:16px;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);
+  background:#0f172a;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;
+  z-index:300;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:opacity .3s;
+  white-space:nowrap;pointer-events:none;}
+
+.action-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center;}
+.small{font-size:11px;color:var(--muted-fg);}
+.div{height:1px;background:var(--border);margin:10px 0;}
+
+/* ── LOGIN OVERLAY ── */
+.login-overlay{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#0f172a 100%);
+  display:flex;align-items:center;justify-content:center;
+  opacity:1;transition:opacity .4s ease;}
+.login-overlay.hidden{opacity:0;pointer-events:none;}
+.login-card{background:#fff;border-radius:20px;padding:36px 32px;width:90%;max-width:380px;
+  box-shadow:0 25px 60px rgba(0,0,0,.4);text-align:center;animation:loginSlide .5s ease;}
+@keyframes loginSlide{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.login-logo{width:64px;height:64px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);border-radius:16px;
+  display:grid;place-items:center;font-size:28px;margin:0 auto 16px;color:#fff;
+  box-shadow:0 8px 24px rgba(29,78,216,.3);}
+.login-title{font-size:22px;font-weight:800;color:#0f172a;margin-bottom:4px;}
+.login-sub{font-size:13px;color:#64748b;margin-bottom:24px;}
+.login-field{text-align:left;margin-bottom:14px;}
+.login-field label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;
+  display:block;margin-bottom:5px;}
+.login-field input{width:100%;height:44px;padding:0 14px;border:2px solid #e2e8f0;border-radius:10px;
+  font-size:14px;color:#0f172a;background:#f8fafc;outline:none;transition:all .2s;font-family:inherit;}
+.login-field input:focus{border-color:#1d4ed8;background:#fff;box-shadow:0 0 0 4px rgba(29,78,216,.1);}
+.login-btn{width:100%;height:46px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;
+  border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;
+  transition:all .2s;font-family:inherit;margin-top:6px;}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(29,78,216,.35);}
+.login-btn:active{transform:translateY(0);}
+.login-error{color:#dc2626;font-size:12px;font-weight:600;margin-top:10px;min-height:18px;
+  animation:shake .4s ease;}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* ── ONBOARDING POPUP ── */
+.onb-overlay{position:fixed;inset:0;z-index:8000;background:rgba(0,0,0,.55);
+  display:flex;align-items:center;justify-content:center;
+  opacity:1;transition:opacity .3s ease;}
+.onb-overlay.hidden{display:none;}
+.onb-card{background:#fff;border-radius:20px;padding:32px 28px 28px;width:92%;max-width:440px;
+  box-shadow:0 25px 60px rgba(0,0,0,.3);animation:onbPop .4s ease;}
+@keyframes onbPop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.onb-step-dots{display:flex;justify-content:center;gap:6px;margin-bottom:20px;}
+.onb-dot{width:8px;height:8px;border-radius:50%;background:#e2e8f0;transition:all .2s;}
+.onb-dot.active{background:#1d4ed8;width:24px;border-radius:4px;}
+.onb-icon{font-size:48px;text-align:center;margin-bottom:12px;}
+.onb-title{font-size:20px;font-weight:800;text-align:center;color:#0f172a;margin-bottom:6px;}
+.onb-desc{font-size:14px;color:#64748b;text-align:center;line-height:1.7;margin-bottom:24px;}
+.onb-actions{display:flex;gap:10px;}
+.onb-skip{flex:1;height:42px;background:transparent;border:1px solid #e2e8f0;border-radius:10px;
+  font-size:13px;font-weight:600;color:#64748b;cursor:pointer;font-family:inherit;transition:all .15s;}
+.onb-skip:hover{background:#f1f5f9;color:#0f172a;}
+.onb-next{flex:2;height:42px;background:linear-gradient(135deg,#1d4ed8,#7c3aed);color:#fff;
+  border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:all .2s;}
+.onb-next:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(29,78,216,.3);}
+
+/* ── HIDE APP UNTIL LOGIN ── */
+.app-locked .hdr,.app-locked .wrap,.app-locked .fab{display:none!important;}
+
+@media print{.hdr .hdr-r,.fab,.overlay,.tabs,.action-row,.bulk-bar,.login-overlay,.onb-overlay{display:none!important;}
+  .pane{display:block!important;}.card{break-inside:avoid;}}
+</style>
+</head>
+<body class="app-locked">
+
+<!-- ═══ LOGIN GATE ═══ -->
+<div id="loginOverlay" class="login-overlay">
+  <div class="login-card">
+    <div class="login-logo">💰</div>
+    <div class="login-title" id="loginTitle">Payroll Tool</div>
+    <div class="login-sub" id="loginSub">เข้าสู่ระบบเพื่อใช้งาน</div>
+    <form onsubmit="doLogin(event)">
+      <div class="login-field">
+        <label id="loginUserLabel">Username</label>
+        <input type="text" id="loginUser" placeholder="Username" autocomplete="username" autofocus>
+      </div>
+      <div class="login-field">
+        <label id="loginPassLabel">Password</label>
+        <input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button type="submit" class="login-btn" id="loginBtn">เข้าสู่ระบบ</button>
+    </form>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ═══ ONBOARDING POPUP ═══ -->
+<div id="onbOverlay" class="onb-overlay hidden">
+  <div class="onb-card">
+    <div class="onb-step-dots" id="onbDots"></div>
+    <div class="onb-icon" id="onbIcon">👋</div>
+    <div class="onb-title" id="onbTitle">ยินดีต้อนรับ!</div>
+    <div class="onb-desc" id="onbDesc"></div>
+    <div class="onb-actions">
+      <button class="onb-skip" onclick="skipOnboarding()" id="onbSkipBtn">ข้าม</button>
+      <button class="onb-next" onclick="nextOnboarding()" id="onbNextBtn">ถัดไป →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HEADER ═══ -->
+<div class="hdr">
+  <div class="hdr-l">
+    <div class="hdr-ico">💰</div>
+    <div>
+      <div class="hdr-title" data-i="appTitle">ค่าแรงรายวัน</div>
+      <div class="hdr-sub" id="hdrSub">—</div>
+    </div>
+  </div>
+  <div class="hdr-r">
+    <div class="lang-sw">
+      <button class="lang-btn on" onclick="setLang('th')">TH</button>
+      <button class="lang-btn" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" onclick="setLang('vi')">VI</button>
+    </div>
+    <button class="btn btn-o btn-s" onclick="showPaste()">📋</button>
+    <button class="btn btn-o btn-s" onclick="doExport()">⬇</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ═══ CONFIG ═══ -->
+  <div class="card">
+    <div class="card-hdr">
+      <span class="card-title" data-i="cfgTitle">⚙️ ตั้งค่ากะงาน</span>
+    </div>
+    <div class="card-body">
+      <div class="g2">
+        <div class="fg">
+          <label data-i="labelDate">วันที่</label>
+          <div class="date-row">
+            <input type="date" id="cfgDate" oninput="onDateChange()">
+            <button class="btn-today" onclick="setToday()" data-i="btnToday">วันนี้</button>
+          </div>
+        </div>
+        <div class="fg">
+          <label data-i="labelPreset">กะ (Preset)</label>
+          <select id="cfgPreset" onchange="applyPreset()">
+            <option value="" data-i="presetCustom">— กำหนดเอง —</option>
+            <option value="08:30|17:30" data-i="preset1">กะปกติ 08:30–17:30</option>
+            <option value="09:00|18:00" data-i="preset2">กะสาย 09:00–18:00</option>
+            <option value="09:00|15:00" data-i="preset3">กะสั้น 09:00–15:00</option>
+            <option value="10:00|16:00" data-i="preset4">กะสั้นสาย 10:00–16:00</option>
+            <option value="07:00|12:00" data-i="preset5">กะเช้าสั้น 07:00–12:00</option>
+            <option value="17:00|02:00" data-i="preset6">กะดึก 17:00–02:00</option>
+          </select>
+        </div>
+        <div class="fg">
+          <label data-i="labelStart">เวลาเริ่มกะ</label>
+          <input type="time" id="cfgStart" value="09:00" oninput="onShiftChange()">
+        </div>
+        <div class="fg">
+          <label data-i="labelEnd">เวลาเลิกกะ</label>
+          <input type="time" id="cfgEnd" value="18:00" oninput="onShiftChange()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TABS ═══ -->
+  <div class="tabs">
+    <button class="tab on" onclick="sw('input',this)" data-i="tabInput">📝 บันทึกเวลา</button>
+    <button class="tab" onclick="sw('result',this)" data-i="tabResult">📊 ผลคำนวณ</button>
+    <button class="tab" onclick="sw('summary',this)" data-i="tabSummary">📋 สรุปยอด</button>
+  </div>
+
+  <!-- ═══ PANE: INPUT ═══ -->
+  <div id="pane-input" class="pane on">
+    <div class="action-row">
+      <button class="btn btn-p" onclick="addEmp()" data-i="btnAdd">＋ เพิ่มพนักงาน</button>
+      <button class="btn btn-o" onclick="showPaste()" data-i="btnPaste">📋 วางจาก Excel</button>
+      <button class="btn btn-o" onclick="doCalc();sw('result',document.querySelectorAll('.tab')[1])" data-i="btnCalc">⚡ คำนวณ</button>
+    </div>
+    <!-- Bulk actions (visible when >0 employees) -->
+    <div id="bulkBar" class="bulk-bar" style="display:none">
+      <span class="small" style="align-self:center" data-i="bulkLabel">การดำเนินการกลุ่ม:</span>
+      <button class="btn btn-o btn-xs" onclick="setAllCheckout()" data-i="btnSetAllOut">✓ ตั้งเวลาออกทุกคน</button>
+      <button class="btn btn-o btn-xs" onclick="collapseAll()" data-i="btnCollapseAll">▲ ยุบทั้งหมด</button>
+    </div>
+    <div id="empList"></div>
+    <div id="emptyState" class="empty-state">
+      <div class="es-icon">👥</div>
+      <div class="es-title" data-i="esTitle">ยังไม่มีพนักงาน</div>
+      <div class="es-sub" data-i="esSub">กดปุ่มเพิ่มพนักงาน หรือวางข้อมูลจาก Excel</div>
+      <button class="btn btn-p" onclick="loadSample()" data-i="btnSample">🔽 โหลดข้อมูลตัวอย่าง</button>
+    </div>
+  </div>
+
+  <!-- ═══ PANE: RESULT ═══ -->
+  <div id="pane-result" class="pane">
+    <div class="action-row">
+      <button class="btn btn-p" onclick="doCalc()" data-i="btnRecalc">⚡ คำนวณใหม่</button>
+      <button class="btn btn-o" onclick="doExport()" data-i="btnCSV">⬇ CSV</button>
+      <button class="btn btn-o" onclick="window.print()" data-i="btnPrint">🖨 พิมพ์</button>
+    </div>
+    <div class="card">
+      <div class="card-hdr">
+        <span class="card-title" data-i="resultTitle">ผลการคำนวณ</span>
+        <span class="small" id="resDate"></span>
+      </div>
+      <div class="tbl-wrap">
+        <table>
+          <thead id="resThead"></thead>
+          <tbody id="resTbody">
+            <tr><td colspan="11" class="empty-state" style="padding:28px" data-i="tblEmpty">กดปุ่ม ⚡ คำนวณ เพื่อดูผล</td></tr>
+          </tbody>
+          <tfoot id="resTfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+    <div class="small" style="padding:4px 2px;display:flex;gap:12px;flex-wrap:wrap;">
+      <span>🔵 BM = <span data-i="legBM">ปัดสายขึ้น 15 นาที</span></span>
+      <span>🟢 DW = <span data-i="legDW">หักสายตรง</span></span>
+      <span>⬜ <span data-i="legIntern">ฝึกงาน ฿100 flat</span></span>
+    </div>
+  </div>
+
+  <!-- ═══ PANE: SUMMARY ═══ -->
+  <div id="pane-summary" class="pane">
+    <div id="summaryContent">
+      <div class="empty-state"><div class="es-icon">📋</div><div class="es-sub" data-i="sumEmpty">กดปุ่ม ⚡ คำนวณก่อน</div></div>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<button class="fab" onclick="doCalc();sw('result',document.querySelectorAll('.tab')[1])">⚡</button>
+
+<!-- ═══ PASTE MODAL ═══ -->
+<div id="pasteModal" class="overlay hidden" onclick="if(event.target===this)hidePaste()">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;">
+      <div>
+        <div class="modal-title" data-i="pasteTitle">📋 วางข้อมูลจาก Excel</div>
+        <div class="modal-sub" data-i="pasteSub">คัดลอกแถวจาก Excel แล้ววางที่นี่<br>รูปแบบ: <b>ลำดับ | ชื่อ | Checkin | Checkout | ทีม | ชื่อเล่น</b></div>
+      </div>
+      <button class="btn btn-g" onclick="hidePaste()" style="font-size:16px;padding:0 6px">✕</button>
+    </div>
+    <div class="fg" style="margin-bottom:12px;">
+      <label data-i="pasteLabel">วางข้อมูลที่นี่</label>
+      <textarea id="pasteArea" placeholder="1&#9;ปนัดดา มานมูเราะ&#9;3/1/2026 9:00&#9;18:00:00&#9;BM1&#9;หวาน&#10;2&#9;อรพรรณ แสงจำปี&#9;3/1/2026 9:37&#9;18:00:00&#9;BM1&#9;ออร์"></textarea>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-p" style="flex:1" onclick="doPaste()" data-i="pasteBtn">✅ นำเข้าข้อมูล</button>
+      <button class="btn btn-o" onclick="hidePaste()" data-i="btnCancel">ยกเลิก</button>
+    </div>
+  </div>
+</div>
+
+<div id="toastEl" class="toast" style="opacity:0"></div>
+
+<!-- ═══════════════════════════════════════════
+     SCRIPT
+══════════════════════════════════════════════ -->
+<script>
+// ══════════════════════════════════════════
+//  i18n
+// ══════════════════════════════════════════
+const I18N = {
+th:{
+  appTitle:'ค่าแรงรายวัน',
+  cfgTitle:'⚙️ ตั้งค่ากะงาน',
+  labelDate:'วันที่',btnToday:'วันนี้',
+  labelPreset:'กะ (Preset)',labelStart:'เวลาเริ่มกะ',labelEnd:'เวลาเลิกกะ',
+  presetCustom:'— กำหนดเอง —',preset1:'กะปกติ 08:30–17:30',preset2:'กะสาย 09:00–18:00',
+  preset3:'กะสั้น 09:00–15:00',preset4:'กะสั้นสาย 10:00–16:00',
+  preset5:'กะเช้าสั้น 07:00–12:00',preset6:'กะดึก 17:00–02:00',
+  tabInput:'📝 บันทึกเวลา',tabResult:'📊 ผลคำนวณ',tabSummary:'📋 สรุปยอด',
+  btnAdd:'＋ เพิ่มพนักงาน',btnPaste:'📋 วาง Excel',btnCalc:'⚡ คำนวณ',
+  btnRecalc:'⚡ คำนวณใหม่',btnCSV:'⬇ CSV',btnPrint:'🖨 พิมพ์',
+  btnCancel:'ยกเลิก',btnSample:'🔽 ข้อมูลตัวอย่าง',
+  bulkLabel:'กลุ่ม:',btnSetAllOut:'✓ ตั้งเวลาออกทุกคน',btnCollapseAll:'▲ ยุบทั้งหมด',
+  esTitle:'ยังไม่มีพนักงาน',esSub:'กดปุ่มเพิ่มพนักงาน หรือวางข้อมูลจาก Excel',
+  resultTitle:'ผลการคำนวณ',tblEmpty:'กดปุ่ม ⚡ คำนวณ เพื่อดูผล',
+  sumEmpty:'กดปุ่ม ⚡ คำนวณก่อน',
+  fldName:'ชื่อ-นามสกุล',fldNick:'ชื่อเล่น',fldTeam:'ทีม / Note',
+  fldCI:'เวลาเข้างาน',fldCO:'เวลาออกงาน',fldOTb:'OT ก่อน (ชม.)',fldOTa:'OT หลัง (ชม.)',
+  fldLeave:'ลางาน (ชม.)',fldDmg:'หักสินค้า (฿)',fldNote:'หมายเหตุ',btnDel:'🗑 ลบ',
+  thNum:'#',thName:'ชื่อ',thTeam:'ทีม',thBase:'฿ฐาน',thLateM:'สาย(น.)',
+  thLateDed:'หักสาย',thEarlyDed:'ออกก่อน',thOT:'OT',thLeave:'หักลา',thDmg:'หักสินค้า',thTotal:'รวม ฿',
+  legBM:'BM ปัดขึ้น 15น.',legDW:'DW หักตรง',legIntern:'ฝึกงาน ฿100 flat',
+  pasteTitle:'📋 วางข้อมูลจาก Excel',
+  pasteSub:'คัดลอกแถวจาก Excel แล้ววางที่นี่\nรูปแบบ: ลำดับ | ชื่อ | Checkin | Checkout | ทีม | ชื่อเล่น',
+  pasteLabel:'วางข้อมูลที่นี่',pasteBtn:'✅ นำเข้าข้อมูล',
+  statPpl:'👥 พนักงาน',statTotal:'💰 รวมค่าแรง',statBM:'🔵 BM รวม',statDW:'🟢 DW รวม',
+  statLate:'⏰ มาสาย',statEarly:'🏃 ออกก่อน',statNeg:'⚠️ ค่าแรงติดลบ',
+  sumByTeam:'สรุปแยกทีม',sumRules:'📌 เกณฑ์การคำนวณ',
+  thTeamS:'ทีม',thCount:'จำนวน',thSum:'รวมค่าแรง (฿)',rowTotal:'รวมทั้งหมด',
+  rules:'ค่าแรง: Full shift (>6ชม.) = ฿500 · BM short ≤6ชม. = ฿400 · DW short ≤6ชม. = ฿350 · ฝึกงาน = ฿100 flat\nQ: full=8 · short=5 · BM สาย: ปัดขึ้น 15น. (แม้แต่ 1 นาที) · DW สาย: หักตรง · OT = (฿÷Q)×1.5×ชม.',
+  chipOnTime:'✅ ตรงเวลา',chipShiftEnd:'✅ เลิกตรง',
+  toastImport:'✅ นำเข้าสำเร็จ',toastNoData:'⚠️ ไม่พบข้อมูล',toastSample:'✅ โหลดตัวอย่าง 10 คน',
+  toastCSV:'⬇️ ดาวน์โหลด CSV แล้ว',prevOnTime:'ตรงเวลา',prevLate:'สาย',prevMin:'น.',
+  hdrEmpty:'กรุณาเลือกวันที่',
+},
+en:{
+  appTitle:'Daily Payroll',
+  cfgTitle:'⚙️ Shift Settings',
+  labelDate:'Date',btnToday:'Today',
+  labelPreset:'Shift (Preset)',labelStart:'Shift Start',labelEnd:'Shift End',
+  presetCustom:'— Custom —',preset1:'Regular 08:30–17:30',preset2:'Late 09:00–18:00',
+  preset3:'Short 09:00–15:00',preset4:'Late-Short 10:00–16:00',
+  preset5:'Early-Short 07:00–12:00',preset6:'Night 17:00–02:00',
+  tabInput:'📝 Attendance',tabResult:'📊 Results',tabSummary:'📋 Summary',
+  btnAdd:'＋ Add Employee',btnPaste:'📋 Paste Excel',btnCalc:'⚡ Calculate',
+  btnRecalc:'⚡ Recalculate',btnCSV:'⬇ CSV',btnPrint:'🖨 Print',
+  btnCancel:'Cancel',btnSample:'🔽 Load Sample Data',
+  bulkLabel:'Bulk:',btnSetAllOut:'✓ Set All Check-out',btnCollapseAll:'▲ Collapse All',
+  esTitle:'No Employees Yet',esSub:'Click Add Employee or Paste from Excel',
+  resultTitle:'Payroll Results',tblEmpty:'Click ⚡ Calculate to view results',
+  sumEmpty:'Click ⚡ Calculate first',
+  fldName:'Full Name',fldNick:'Nickname',fldTeam:'Team / Note',
+  fldCI:'Check-in Time',fldCO:'Check-out Time',fldOTb:'OT Before (hrs)',fldOTa:'OT After (hrs)',
+  fldLeave:'Leave (hrs)',fldDmg:'Damage Deduct (฿)',fldNote:'Remarks',btnDel:'🗑 Remove',
+  thNum:'#',thName:'Name',thTeam:'Team',thBase:'Base ฿',thLateM:'Late(m)',
+  thLateDed:'Late Ded.',thEarlyDed:'Early Dep.',thOT:'OT Pay',thLeave:'Leave Ded.',thDmg:'Damage',thTotal:'Total ฿',
+  legBM:'BM rounds up to 15min',legDW:'DW exact minutes',legIntern:'Intern ฿100 flat',
+  pasteTitle:'📋 Paste from Excel',
+  pasteSub:'Copy rows from Excel and paste here.\nFormat: Seq | Name | Check-in | Check-out | Team | Nickname',
+  pasteLabel:'Paste data here',pasteBtn:'✅ Import Data',
+  statPpl:'👥 Employees',statTotal:'💰 Total Wages',statBM:'🔵 BM Total',statDW:'🟢 DW Total',
+  statLate:'⏰ Late Arrivals',statEarly:'🏃 Early Departures',statNeg:'⚠️ Negative Wages',
+  sumByTeam:'Team Breakdown',sumRules:'📌 Calculation Rules (Active)',
+  thTeamS:'Team',thCount:'Count',thSum:'Total Wages (฿)',rowTotal:'Grand Total',
+  rules:'Base wage: Full shift (>6h) = ฿500 · BM short ≤6h = ฿400 · DW short ≤6h = ฿350 · Intern = ฿100 flat\nQ: full=8 · short=5 · BM late: round UP to 15min (even 1 min!) · DW late: exact · OT = (฿÷Q)×1.5×hrs',
+  chipOnTime:'✅ On Time',chipShiftEnd:'✅ On Time',
+  toastImport:'✅ Imported',toastNoData:'⚠️ No valid data found',toastSample:'✅ Sample data loaded (10 people)',
+  toastCSV:'⬇️ CSV downloaded',prevOnTime:'On time',prevLate:'Late',prevMin:'min',
+  hdrEmpty:'Select a date',
+},
+vi:{
+  appTitle:'Tính Lương Ngày',
+  cfgTitle:'⚙️ Cài Đặt Ca Làm',
+  labelDate:'Ngày',btnToday:'Hôm nay',
+  labelPreset:'Ca (Gợi ý)',labelStart:'Giờ bắt đầu',labelEnd:'Giờ kết thúc',
+  presetCustom:'— Tự chọn —',preset1:'Ca thường 08:30–17:30',preset2:'Ca muộn 09:00–18:00',
+  preset3:'Ca ngắn 09:00–15:00',preset4:'Ca ngắn muộn 10:00–16:00',
+  preset5:'Ca sáng ngắn 07:00–12:00',preset6:'Ca đêm 17:00–02:00',
+  tabInput:'📝 Chấm công',tabResult:'📊 Kết quả',tabSummary:'📋 Tổng kết',
+  btnAdd:'＋ Thêm nhân viên',btnPaste:'📋 Dán từ Excel',btnCalc:'⚡ Tính lương',
+  btnRecalc:'⚡ Tính lại',btnCSV:'⬇ CSV',btnPrint:'🖨 In',
+  btnCancel:'Hủy',btnSample:'🔽 Tải dữ liệu mẫu',
+  bulkLabel:'Nhóm:',btnSetAllOut:'✓ Đặt giờ ra tất cả',btnCollapseAll:'▲ Thu gọn',
+  esTitle:'Chưa có nhân viên',esSub:'Nhấn Thêm nhân viên hoặc Dán từ Excel',
+  resultTitle:'Kết quả tính lương',tblEmpty:'Nhấn ⚡ Tính lương để xem kết quả',
+  sumEmpty:'Nhấn ⚡ Tính lương trước',
+  fldName:'Họ và tên',fldNick:'Tên thường gọi',fldTeam:'Nhóm / Note',
+  fldCI:'Giờ vào',fldCO:'Giờ ra',fldOTb:'OT trước (giờ)',fldOTa:'OT sau (giờ)',
+  fldLeave:'Nghỉ phép (giờ)',fldDmg:'Trừ hàng hỏng (฿)',fldNote:'Ghi chú',btnDel:'🗑 Xóa',
+  thNum:'#',thName:'Họ tên',thTeam:'Nhóm',thBase:'฿ Cơ bản',thLateM:'Muộn(p)',
+  thLateDed:'Trừ muộn',thEarlyDed:'Về sớm',thOT:'OT',thLeave:'Trừ phép',thDmg:'Trừ hàng',thTotal:'Tổng ฿',
+  legBM:'BM làm tròn lên 15 phút',legDW:'DW tính phút thực',legIntern:'Thực tập ฿100',
+  pasteTitle:'📋 Dán dữ liệu từ Excel',
+  pasteSub:'Sao chép hàng từ Excel rồi dán vào đây.\nĐịnh dạng: STT | Họ tên | Giờ vào | Giờ ra | Nhóm | Tên thường gọi',
+  pasteLabel:'Dán dữ liệu vào đây',pasteBtn:'✅ Nhập dữ liệu',
+  statPpl:'👥 Nhân viên',statTotal:'💰 Tổng lương',statBM:'🔵 Tổng BM',statDW:'🟢 Tổng DW',
+  statLate:'⏰ Đi muộn',statEarly:'🏃 Về sớm',statNeg:'⚠️ Lương âm',
+  sumByTeam:'Tổng hợp theo nhóm',sumRules:'📌 Quy tắc tính lương (đang dùng)',
+  thTeamS:'Nhóm',thCount:'Số lượng',thSum:'Tổng lương (฿)',rowTotal:'Tổng cộng',
+  rules:'Lương cơ bản: Ca đủ (>6h) = ฿500 · BM ngắn ≤6h = ฿400 · DW ngắn ≤6h = ฿350 · Thực tập = ฿100\nQ: đủ=8 · ngắn=5 · BM đi muộn: làm tròn lên 15 phút (kể cả 1 phút) · DW: tính phút thực · OT = (฿÷Q)×1.5×giờ',
+  chipOnTime:'✅ Đúng giờ',chipShiftEnd:'✅ Đúng giờ',
+  toastImport:'✅ Nhập thành công',toastNoData:'⚠️ Không tìm thấy dữ liệu',toastSample:'✅ Đã tải mẫu 10 người',
+  toastCSV:'⬇️ Đã tải CSV',prevOnTime:'Đúng giờ',prevLate:'Muộn',prevMin:'ph',
+  hdrEmpty:'Chọn ngày làm việc',
+}};
+
+let CUR_LANG='th';
+function t(k){return I18N[CUR_LANG][k]||I18N.th[k]||k;}
+function setLang(l){
+  CUR_LANG=l;
+  document.querySelectorAll('.lang-btn').forEach(b=>b.classList.toggle('on',b.textContent===l.toUpperCase()));
+  // Update data-i elements
+  document.querySelectorAll('[data-i]').forEach(el=>{
+    const k=el.getAttribute('data-i');
+    const v=t(k);
+    if(el.tagName==='INPUT'||el.tagName==='TEXTAREA')el.placeholder=v;
+    else el.textContent=v;
+  });
+  // Update select options with data-i
+  document.querySelectorAll('select option[data-i]').forEach(opt=>{
+    opt.textContent=t(opt.getAttribute('data-i'));
+  });
+  updateHdrSub();
+  renderList();
+  if(results.length)renderResults();
+}
+
+// ══════════════════════════════════════════
+//  PAYROLL ENGINE
+// ══════════════════════════════════════════
+const R={
+  FULL:500,BM_S:400,DW_S:350,INTERN:100,
+  Q_F:8,Q_S:5,SHORT:6,OT:1.5,BLOCK:15
+};
+const BM=new Set(['BM1','BM2','BM3','BM4','BMN','BMM']);
+const DW=new Set(['DW1','DW2','DW3','DWN','DWM']);
+
+const isBM=t=>BM.has(t);
+const isDW=t=>DW.has(t);
+const isIntern=t=>!BM.has(t)&&!DW.has(t);
+const ceil15=n=>n<=0?0:Math.ceil(n/15)*15;
+
+function parseT(v){
+  if(!v&&v!==0)return null;
+  v=String(v).trim();
+  let m=v.match(/\d{1,4}[\/\-]\d{1,2}[\/\-]\d{1,4}\s+(\d{1,2}):(\d{2})/);
+  if(m)return{h:+m[1],m:+m[2]};
+  m=v.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
+  if(m){let h=+m[1],mn=+m[2];if(m[3]&&m[3].toUpperCase()==='PM'&&h!==12)h+=12;if(m[3]&&m[3].toUpperCase()==='AM'&&h===12)h=0;return{h,m:mn};}
+  return null;
+}
+const toMin=t=>t.h*60+t.m;
+const fmtT=t=>`${String(t.h).padStart(2,'0')}:${String(t.m).padStart(2,'0')}`;
+function shHrs(s,e){let sm=toMin(s),em=toMin(e);if(em<=sm)em+=1440;return(em-sm)/60;}
+
+function parseShift(s,e){return{start:{h:+s.split(':')[0],m:+s.split(':')[1]},end:{h:+e.split(':')[0],m:+e.split(':')[1]}};}
+
+function calcWage(emp){
+  const team=(emp.team||'').trim();
+  const sh=parseShift(document.getElementById('cfgStart').value||'09:00',document.getElementById('cfgEnd').value||'18:00');
+  const hrs=shHrs(sh.start,sh.end);
+  const Q=hrs<=R.SHORT?R.Q_S:R.Q_F;
+  if(isIntern(team))return{isIntern:true,W:R.INTERN,Q,hrs,lateMin:0,lateMinDed:0,lateDed:0,earlyMin:0,earlyDed:0,otHrs:0,otPay:0,leaveDed:0,damageDed:0,total:R.INTERN};
+  const W=hrs<=R.SHORT?(isBM(team)?R.BM_S:R.DW_S):R.FULL;
+  const rpm=W/Q/60;
+  const ci=parseT(emp.checkin);
+  let lateMin=0,lateMinDed=0,lateDed=0;
+  if(ci){const raw=toMin(ci)-toMin(sh.start);lateMin=raw>0?raw:0;if(lateMin>0){lateMinDed=isBM(team)?ceil15(lateMin):lateMin;lateDed=lateMinDed*rpm;}}
+  const co=parseT(emp.checkout);
+  let earlyMin=0,earlyDed=0;
+  if(co){
+    let seM=toMin(sh.end),coM=toMin(co);
+    const overnight=toMin(sh.end)<toMin(sh.start);
+    if(overnight){if(coM<toMin(sh.start))coM+=1440;seM+=1440;}
+    earlyMin=Math.max(0,seM-coM);earlyDed=earlyMin*rpm;
+  }
+  const otHrs=(parseFloat(emp.otBefore)||0)+(parseFloat(emp.otAfter)||0);
+  const otPay=(W/Q)*R.OT*otHrs;
+  const leaveDed=(W/Q)*(parseFloat(emp.leaveHrs)||0);
+  const damageDed=parseFloat(emp.damageDed)||0;
+  const total=W-lateDed-earlyDed+otPay-leaveDed-damageDed;
+  return{isIntern:false,W,Q,hrs,rpm,lateMin,lateMinDed,lateDed,earlyMin,earlyDed,otHrs,otPay,leaveDed,damageDed,total};
+}
+
+// ══════════════════════════════════════════
+//  APP STATE
+// ══════════════════════════════════════════
+let emps=[],uid=1,results=[];
+const TEAMS=['BM1','BM2','BM3','BM4','BMN','BMM','DW1','DW2','DW3','DWN','DWM','ฝึกงาน BM','นักศึกษาฝึกงาน'];
+const tClass=t=>BM.has(t)?'bm':DW.has(t)?'dw':'intern';
+function fmt(v,d=2){if(v==null)return'—';return(+v).toFixed(d).replace(/\B(?=(\d{3})+(?!\d))/g,',');}
+
+// ══════════════════════════════════════════
+//  SMART DATE / TIME HELPERS
+// ══════════════════════════════════════════
+function setToday(){
+  const d=new Date();
+  document.getElementById('cfgDate').value=d.toISOString().slice(0,10);
+  onDateChange();
+}
+
+const THAI_WD=['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'];
+const THAI_MO=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+const EN_WD=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const EN_MO=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const VI_WD=['CN','T2','T3','T4','T5','T6','T7'];
+const VI_MO=['Th1','Th2','Th3','Th4','Th5','Th6','Th7','Th8','Th9','Th10','Th11','Th12'];
+
+function fmtDate(s){
+  if(!s)return'';
+  const d=new Date(s+'T00:00:00');
+  if(CUR_LANG==='en')return`${EN_WD[d.getDay()]} ${EN_MO[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
+  if(CUR_LANG==='vi')return`${VI_WD[d.getDay()]} ${d.getDate()} ${VI_MO[d.getMonth()]} ${d.getFullYear()}`;
+  return`${THAI_WD[d.getDay()]} ${d.getDate()} ${THAI_MO[d.getMonth()]} ${d.getFullYear()+543}`;
+}
+
+function addMins(base,mins){
+  const tot=(base.h*60+base.m+mins+1440)%1440;
+  return{h:Math.floor(tot/60),m:tot%60};
+}
+
+// Build checkin time chips relative to shift start
+function buildCIChips(shStart){
+  const deltas=[0,5,10,15,20,30,45,60,90,120];
+  return deltas.map(d=>{
+    const tt=addMins(shStart,d);
+    const label=d===0?t('chipOnTime'):`+${d}m ${fmtT(tt)}`;
+    const cls=d===0?'':'late';
+    return{label,val:fmtT(tt),cls};
+  });
+}
+// Build checkout time chips relative to shift end
+function buildCOChips(shEnd){
+  const deltasEarly=[-60,-30,-15];
+  const deltasSame=[0];
+  const deltasOT=[30,60,90,120];
+  const chips=[];
+  deltasEarly.forEach(d=>{
+    const tt=addMins(shEnd,d);
+    chips.push({label:`${d}m ${fmtT(tt)}`,val:fmtT(tt),cls:'early'});
+  });
+  const same=deltasSame[0];
+  chips.push({label:t('chipShiftEnd')+' '+fmtT(shEnd),val:fmtT(shEnd),cls:''});
+  deltasOT.forEach(d=>{
+    const tt=addMins(shEnd,d);
+    chips.push({label:`+${d}m ${fmtT(tt)}`,val:fmtT(tt),cls:'ot'});
+  });
+  return chips;
+}
+
+function showChips(id,type){
+  // type: 'ci' or 'co'
+  const wrapId=`chips-${type}-${id}`;
+  const el=document.getElementById(wrapId);
+  if(!el)return;
+  const shStart=parseShift(document.getElementById('cfgStart').value||'09:00',document.getElementById('cfgEnd').value||'18:00');
+  const chips=type==='ci'?buildCIChips(shStart.start):buildCOChips(shStart.end);
+  el.innerHTML=chips.map(c=>`<button class="chip ${c.cls}" onclick="pickTime('${id}','${type}','${c.val}')">${c.label}</button>`).join('');
+  el.classList.add('show');
+}
+function hideChips(id,type){
+  // small delay so click registers
+  setTimeout(()=>{const el=document.getElementById(`chips-${type}-${id}`);if(el)el.classList.remove('show');},200);
+}
+function pickTime(id,type,val){
+  const field=type==='ci'?'checkin':'checkout';
+  const inputId=`${type}-${id}`;
+  const input=document.getElementById(inputId);
+  if(input)input.value=val;
+  upd(id,field,val);
+  livePreview(id);
+}
+
+// Live preview in card header
+function livePreview(id){
+  const emp=emps.find(e=>e.id===id);
+  if(!emp)return;
+  const r=calcWage(emp);
+  const el=document.getElementById(`prev-${id}`);
+  if(!el)return;
+  if(r.isIntern){
+    el.style.background=I18N.th.intern;el.style.color='#475569';
+    el.textContent='฿100';return;
+  }
+  if(r.lateMin>0){
+    el.style.background=I18N[CUR_LANG]?'#fef3c7':'#fef3c7';
+    el.style.color='#b45309';
+    const label=`${t('prevLate')} ${r.lateMinDed}${t('prevMin')} → ฿${fmt(r.total)}`;
+    el.textContent=label;
+  } else if(r.earlyMin>0){
+    el.style.background='#fee2e2';el.style.color='#dc2626';
+    el.textContent=`฿${fmt(r.total)}`;
+  } else {
+    el.style.background='#dcfce7';el.style.color='#166534';
+    el.textContent=`${t('prevOnTime')} ฿${fmt(r.total)}`;
+  }
+}
+
+// ══════════════════════════════════════════
+//  RENDER EMPLOYEES
+// ══════════════════════════════════════════
+function esc(s){return String(s||'').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+function renderList(){
+  const el=document.getElementById('empList');
+  document.getElementById('emptyState').style.display=emps.length?'none':'';
+  document.getElementById('bulkBar').style.display=emps.length?'flex':'none';
+  if(!emps.length){el.innerHTML='';return;}
+
+  const opts=TEAMS.map(t=>`<option value="${t}">${t}</option>`).join('');
+
+  el.innerHTML=emps.map((e,i)=>{
+    const tc=tClass(e.team||'');
+    return`<div class="emp open" id="ec${e.id}">
+  <div class="emp-hdr" onclick="toggleEmp(${e.id})">
+    <div class="emp-num">${i+1}</div>
+    <div class="emp-nm" id="en${e.id}">${esc(e.name||'—')}${e.nick?` (${esc(e.nick)})`:''}</div>
+    <span class="emp-preview" id="prev-${e.id}" style="background:var(--muted);color:var(--muted-fg);font-size:10px">—</span>
+    <span class="badge ${tc}" id="et${e.id}">${e.team||'?'}</span>
+    <span class="emp-chev">▾</span>
+  </div>
+  <div class="emp-body">
+    <div class="emp-fields">
+      <div class="fg s2">
+        <label>${t('fldName')}</label>
+        <input type="text" value="${esc(e.name||'')}" placeholder="${t('fldName')}"
+          oninput="upd(${e.id},'name',this.value);updHdr(${e.id})">
+      </div>
+      <div class="fg">
+        <label>${t('fldNick')}</label>
+        <input type="text" value="${esc(e.nick||'')}" placeholder="${t('fldNick')}"
+          oninput="upd(${e.id},'nick',this.value);updHdr(${e.id})">
+      </div>
+      <div class="fg">
+        <label>${t('fldTeam')}</label>
+        <select onchange="upd(${e.id},'team',this.value);updHdr(${e.id});livePreview(${e.id})">
+          <option value=""></option>${opts.replace(`value="${e.team||''}"`,`value="${e.team||''}" selected`)}
+        </select>
+      </div>
+      <div class="fg">
+        <label>${t('fldCI')}</label>
+        <input type="text" id="ci-${e.id}" value="${esc(e.checkin||'')}"
+          placeholder="09:00 หรือ 3/1/2026 9:03"
+          onfocus="showChips(${e.id},'ci')" onblur="hideChips(${e.id},'ci')"
+          oninput="upd(${e.id},'checkin',this.value);livePreview(${e.id})">
+        <div class="chips-wrap" id="chips-ci-${e.id}"></div>
+      </div>
+      <div class="fg">
+        <label>${t('fldCO')}</label>
+        <input type="text" id="co-${e.id}" value="${esc(e.checkout||'')}"
+          placeholder="18:00"
+          onfocus="showChips(${e.id},'co')" onblur="hideChips(${e.id},'co')"
+          oninput="upd(${e.id},'checkout',this.value);livePreview(${e.id})">
+        <div class="chips-wrap" id="chips-co-${e.id}"></div>
+      </div>
+      <div class="fg">
+        <label>${t('fldOTb')}</label>
+        <input type="number" step="0.5" min="0" value="${e.otBefore||''}" placeholder="0"
+          oninput="upd(${e.id},'otBefore',this.value);livePreview(${e.id})">
+      </div>
+      <div class="fg">
+        <label>${t('fldOTa')}</label>
+        <input type="number" step="0.5" min="0" value="${e.otAfter||''}" placeholder="0"
+          oninput="upd(${e.id},'otAfter',this.value);livePreview(${e.id})">
+      </div>
+      <div class="fg">
+        <label>${t('fldLeave')}</label>
+        <input type="number" step="0.5" min="0" value="${e.leaveHrs||''}" placeholder="0"
+          oninput="upd(${e.id},'leaveHrs',this.value);livePreview(${e.id})">
+      </div>
+      <div class="fg">
+        <label>${t('fldDmg')}</label>
+        <input type="number" step="1" min="0" value="${e.damageDed||''}" placeholder="0"
+          oninput="upd(${e.id},'damageDed',this.value);livePreview(${e.id})">
+      </div>
+      <div class="fg s2">
+        <label>${t('fldNote')}</label>
+        <input type="text" value="${esc(e.remarks||'')}" placeholder="${t('fldNote')}"
+          oninput="upd(${e.id},'remarks',this.value)">
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">
+      <button class="btn btn-g btn-s" style="color:var(--red)" onclick="delEmp(${e.id})">${t('btnDel')}</button>
+    </div>
+  </div>
+</div>`;
+  }).join('');
+
+  // trigger live previews for filled rows
+  setTimeout(()=>emps.forEach(e=>livePreview(e.id)),0);
+}
+
+function toggleEmp(id){
+  const card=document.getElementById(`ec${id}`);
+  if(card)card.classList.toggle('open');
+}
+function upd(id,k,v){const e=emps.find(x=>x.id===id);if(e)e[k]=v;}
+function updHdr(id){
+  const e=emps.find(x=>x.id===id);if(!e)return;
+  const nm=document.getElementById(`en${id}`);
+  const bt=document.getElementById(`et${id}`);
+  if(nm)nm.textContent=(e.name||'—')+(e.nick?` (${e.nick})`:'');
+  if(bt){bt.textContent=e.team||'?';bt.className='badge '+tClass(e.team||'');}
+}
+function addEmp(data={}){emps.push({id:uid++,...data});renderList();}
+function delEmp(id){emps=emps.filter(e=>e.id!==id);renderList();}
+function collapseAll(){document.querySelectorAll('.emp').forEach(el=>el.classList.remove('open'));}
+function setAllCheckout(){
+  const v=document.getElementById('cfgEnd').value;
+  if(!v)return;
+  emps.forEach(e=>{e.checkout=v;});
+  renderList();
+  toast(`✅ ${v}`);
+}
+
+// ══════════════════════════════════════════
+//  CALCULATE & RENDER
+// ══════════════════════════════════════════
+function doCalc(){
+  results=emps.map(e=>({e,r:calcWage(e)}));
+  renderResults();renderSummary();
+}
+
+function renderResults(){
+  const thead=document.getElementById('resThead');
+  const tbody=document.getElementById('resTbody');
+  const tfoot=document.getElementById('resTfoot');
+  const d=document.getElementById('cfgDate').value;
+  document.getElementById('resDate').textContent=d?fmtDate(d):'';
+
+  // Header
+  const ks=['thNum','thName','thTeam','thBase','thLateM','thLateDed','thEarlyDed','thOT','thLeave','thDmg','thTotal'];
+  const aligns=['.c','','','r','r','r','r','r','r','r','r bold'];
+  thead.innerHTML='<tr>'+ks.map((k,i)=>`<th class="${aligns[i]}">${t(k)}</th>`).join('')+'</tr>';
+
+  if(!results.length){
+    tbody.innerHTML=`<tr><td colspan="11" class="empty-state" style="padding:28px">${t('tblEmpty')}</td></tr>`;
+    tfoot.innerHTML='';return;
+  }
+  let bmT=0,dwT=0,intT=0,grand=0;
+  tbody.innerHTML=results.map(({e,r},i)=>{
+    const tc=tClass(e.team||'');
+    const isNeg=r.total<0;
+    const totCls=isNeg?'c-neg bld mono':'c-pos bld mono';
+    const iBadge=r.isIntern?`<span class="badge intern" style="font-size:9px;margin-left:3px">฿100</span>`:'';
+    const nBadge=isNeg?`<span class="badge badge-red" style="font-size:9px;margin-left:3px">−</span>`:'';
+    const nm=`<div class="bld" style="font-size:13px">${esc(e.name||'—')}</div><div style="font-size:10px;color:var(--muted-fg)">${esc(e.nick||'')}${iBadge}${nBadge}</div>`;
+    if(BM.has(e.team||''))bmT+=r.total;
+    else if(DW.has(e.team||''))dwT+=r.total;
+    else intT+=r.total;
+    grand+=r.total;
+    const d=v=>v>0?`<span class="c-ded mono">${fmt(v)}</span>`:`<span class="c-mu">—</span>`;
+    const p=v=>v>0?`<span class="c-pos mono">${fmt(v)}</span>`:`<span class="c-mu">—</span>`;
+    const lateM=r.lateMinDed>0?`<span class="c-ded mono">${r.lateMinDed}</span>`:`<span class="c-mu">—</span>`;
+    return`<tr>
+<td class="c c-mu">${i+1}</td><td>${nm}</td>
+<td><span class="badge ${tc}">${e.team||'—'}</span></td>
+<td class="r mono">${fmt(r.W)}</td>
+<td class="r">${lateM}</td><td class="r">${d(r.lateDed)}</td><td class="r">${d(r.earlyDed)}</td>
+<td class="r">${p(r.otPay)}</td><td class="r">${d(r.leaveDed)}</td><td class="r">${d(r.damageDed)}</td>
+<td class="r ${totCls}" style="${isNeg?'background:#fff5f5;':''}">${fmt(r.total)}</td>
+</tr>`;
+  }).join('');
+
+  const ip=intT!==0?` &nbsp;·&nbsp; <span class="badge intern">฿100×${results.filter(({r})=>r.isIntern).length}</span> <b class="mono">${fmt(intT)}</b>`:'';
+  tfoot.innerHTML=`<tr class="tr-tot">
+<td colspan="3"><span class="badge bm">BM</span> <b class="mono">${fmt(bmT)}</b> &nbsp;<span class="badge dw">DW</span> <b class="mono">${fmt(dwT)}</b>${ip}</td>
+<td colspan="7" class="r c-mu" style="font-size:11px">${t('rowTotal')}</td>
+<td class="r bld mono" style="font-size:15px">${fmt(grand)}</td>
+</tr>`;
+}
+
+function renderSummary(){
+  const el=document.getElementById('summaryContent');
+  if(!results.length){
+    el.innerHTML=`<div class="empty-state"><div class="es-icon">📋</div><div class="es-sub">${t('sumEmpty')}</div></div>`;return;
+  }
+  const d=document.getElementById('cfgDate').value;
+  const ss=`${document.getElementById('cfgStart').value||'?'} – ${document.getElementById('cfgEnd').value||'?'}`;
+  let grand=0,cnt=0;
+  const tm={};
+  results.forEach(({e,r})=>{
+    const t2=e.team||'?';
+    if(!tm[t2])tm[t2]={n:0,tot:0};
+    tm[t2].n++;tm[t2].tot+=r.total;grand+=r.total;cnt++;
+  });
+  const bmT=Object.entries(tm).filter(([k])=>BM.has(k)).reduce((s,[,v])=>s+v.tot,0);
+  const dwT=Object.entries(tm).filter(([k])=>DW.has(k)).reduce((s,[,v])=>s+v.tot,0);
+  const lN=results.filter(({r})=>r.lateMin>0).length;
+  const eN=results.filter(({r})=>r.earlyMin>0).length;
+  const nN=results.filter(({r})=>r.total<0).length;
+  const ex=[
+    lN?`<div class="stat" style="border-color:#fde68a"><div class="stat-lbl">${t('statLate')}</div><div class="stat-val" style="color:var(--amber)">${lN}</div></div>`:'',
+    eN?`<div class="stat" style="border-color:#fecaca"><div class="stat-lbl">${t('statEarly')}</div><div class="stat-val" style="color:var(--red)">${eN}</div></div>`:'',
+    nN?`<div class="stat" style="border-color:#fca5a5"><div class="stat-lbl">${t('statNeg')}</div><div class="stat-val" style="color:var(--red)">${nN}</div></div>`:'',
+  ].filter(Boolean).join('');
+  const rows=Object.entries(tm).sort(([a],[b])=>a.localeCompare(b,'th')).map(([t2,v])=>`<tr>
+<td><span class="badge ${tClass(t2)}">${t2}</span></td>
+<td class="r">${v.n}</td>
+<td class="r bld mono">${fmt(v.tot)}</td>
+</tr>`).join('');
+
+  el.innerHTML=`<div class="card" style="margin-bottom:10px">
+<div class="card-hdr"><span class="card-title">📅 ${d?fmtDate(d):'—'}</span><span class="small">${ss}</span></div>
+<div class="card-body">
+<div class="stats">
+<div class="stat"><div class="stat-lbl">${t('statPpl')}</div><div class="stat-val">${cnt}</div></div>
+<div class="stat"><div class="stat-lbl">${t('statTotal')}</div><div class="stat-val" style="color:var(--green);font-size:18px">${fmt(grand)}</div><div class="stat-sub">฿</div></div>
+<div class="stat" style="border-color:var(--bm-brd)"><div class="stat-lbl">${t('statBM')}</div><div class="stat-val" style="color:var(--bm);font-size:18px">${fmt(bmT)}</div></div>
+<div class="stat" style="border-color:var(--dw-brd)"><div class="stat-lbl">${t('statDW')}</div><div class="stat-val" style="color:var(--dw);font-size:18px">${fmt(dwT)}</div></div>
+${ex}
+</div></div></div>
+<div class="card">
+<div class="card-hdr"><span class="card-title">${t('sumByTeam')}</span></div>
+<div class="tbl-wrap"><table style="min-width:260px">
+<thead><tr><th>${t('thTeamS')}</th><th class="r">${t('thCount')}</th><th class="r">${t('thSum')}</th></tr></thead>
+<tbody>${rows}</tbody>
+<tfoot><tr class="tr-tot"><td>${t('rowTotal')}</td><td class="r">${cnt}</td><td class="r bld mono">${fmt(grand)}</td></tr></tfoot>
+</table></div></div>
+<div class="card">
+<div class="card-hdr"><span class="card-title">${t('sumRules')}</span></div>
+<div class="card-body small" style="line-height:2;white-space:pre-line">${t('rules')}</div>
+</div>`;
+}
+
+// ══════════════════════════════════════════
+//  UI HELPERS
+// ══════════════════════════════════════════
+function sw(name,btn){
+  document.querySelectorAll('.pane').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));
+  document.getElementById('pane-'+name).classList.add('on');
+  if(btn)btn.classList.add('on');
+}
+function applyPreset(){
+  const v=document.getElementById('cfgPreset').value;
+  if(!v)return;
+  const[s,e]=v.split('|');
+  document.getElementById('cfgStart').value=s;
+  document.getElementById('cfgEnd').value=e;
+  onShiftChange();
+}
+function onShiftChange(){
+  document.getElementById('cfgPreset').value='';
+  updateHdrSub();
+}
+function onDateChange(){updateHdrSub();}
+function updateHdrSub(){
+  const d=document.getElementById('cfgDate').value;
+  const s=document.getElementById('cfgStart').value;
+  const e=document.getElementById('cfgEnd').value;
+  const dateStr=d?fmtDate(d):t('hdrEmpty');
+  document.getElementById('hdrSub').textContent=d?`${dateStr} · ${s}–${e}`:t('hdrEmpty');
+}
+
+let _toastTimer=null;
+function toast(msg){
+  const el=document.getElementById('toastEl');
+  el.textContent=msg;el.style.opacity='1';
+  clearTimeout(_toastTimer);
+  _toastTimer=setTimeout(()=>{el.style.opacity='0';},2800);
+}
+
+// ══════════════════════════════════════════
+//  PASTE / IMPORT
+// ══════════════════════════════════════════
+function showPaste(){document.getElementById('pasteModal').classList.remove('hidden');}
+function hidePaste(){document.getElementById('pasteModal').classList.add('hidden');}
+function doPaste(){
+  const txt=document.getElementById('pasteArea').value.trim();
+  if(!txt){hidePaste();return;}
+  const lines=txt.split('\n').filter(l=>l.trim());
+  let n=0;
+  lines.forEach(line=>{
+    const cols=line.split('\t').map(c=>c.trim());
+    if(cols.length<2)return;
+    const off=(!isNaN(parseInt(cols[0]))&&cols.length>3)?1:0;
+    const name=cols[off]||'';
+    if(!name||name==='ชื่อ-นามสกุล'||name==='Full Name'||name==='Họ và tên')return;
+    addEmp({name,checkin:cols[off+1]||'',checkout:cols[off+2]||'',team:cols[off+3]||'',nick:cols[off+4]||'',remarks:cols[off+5]||''});
+    n++;
+  });
+  document.getElementById('pasteArea').value='';
+  hidePaste();
+  toast(n>0?`${t('toastImport')} ${n}`:t('toastNoData'));
+}
+
+// ══════════════════════════════════════════
+//  SAMPLE DATA
+// ══════════════════════════════════════════
+function loadSample(){
+  document.getElementById('cfgDate').value='2026-03-01';
+  document.getElementById('cfgPreset').value='09:00|18:00';
+  applyPreset();
+  [
+    {name:'อรพรรณ แสงจำปี',   checkin:'3/1/2026 9:37', checkout:'18:00',team:'BM1',nick:'ออร์'},
+    {name:'อธิบดี วัสสุวรรณ',  checkin:'3/1/2026 9:18', checkout:'18:00',team:'BM1',nick:'ฟรี'},
+    {name:'ปนัดดา มานมูเราะ',  checkin:'3/1/2026 9:00', checkout:'18:00',team:'BM1',nick:'หวาน'},
+    {name:'นรินลักษณ์ สวัสดี', checkin:'3/1/2026 9:02', checkout:'18:00',team:'BM1',nick:'ใหม่'},
+    {name:'ธนาธิป ควรสำโรง',  checkin:'3/1/2026 8:57', checkout:'18:00',team:'BM1',nick:'ดีม'},
+    {name:'กานต์เก้า แจ้งสว่าง',checkin:'3/1/2026 8:57',checkout:'18:00',team:'BM1',nick:'ชมพู่'},
+    {name:'ณัฐกิตติ์ โล้หนู',  checkin:'3/1/2026 8:55', checkout:'18:00',team:'BM1',nick:'เฟิร์ส'},
+    {name:'กาญจนา วิสุทธิพงศ์',checkin:'3/1/2026 8:55',checkout:'18:00',team:'BM1',nick:'แม่บ้านเก๋'},
+    {name:'นิชากร กรุดบาง',    checkin:'3/1/2026 8:55', checkout:'18:00',team:'BM1',nick:'ครีม'},
+    {name:'คุณวุฒิ เรืองพงษ์', checkin:'3/1/2026 8:54', checkout:'18:00',team:'BM1',nick:'ป๋อ'},
+  ].forEach(d=>addEmp(d));
+  toast(t('toastSample'));
+}
+
+// ══════════════════════════════════════════
+//  EXPORT CSV
+// ══════════════════════════════════════════
+function doExport(){
+  if(!results.length)doCalc();
+  if(!results.length){toast(t('toastNoData'));return;}
+  const d=document.getElementById('cfgDate').value||'export';
+  const hdr=[t('thNum'),t('thName'),t('fldNick'),t('thTeam'),t('thBase'),'Q',
+    t('thLateM'),'Rounded Late(m)',t('thLateDed'),
+    'Early(m)',t('thEarlyDed'),'OT(hrs)',t('thOT'),
+    t('thLeave'),t('thDmg'),t('thTotal')];
+  const rows=results.map(({e,r},i)=>[
+    i+1,e.name||'',e.nick||'',e.team||'',r.W,r.Q,
+    r.lateMin,r.lateMinDed,(r.lateDed||0).toFixed(4),
+    r.earlyMin,(r.earlyDed||0).toFixed(4),
+    r.otHrs,(r.otPay||0).toFixed(4),
+    (r.leaveDed||0).toFixed(4),r.damageDed||0,
+    r.total.toFixed(4)
+  ]);
+  const csv='\uFEFF'+[hdr,...rows].map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download=`payroll_${d}.csv`;a.click();
+  toast(t('toastCSV'));
+}
+
+// ══════════════════════════════════════════
+//  i18n for Login & Onboarding
+// ══════════════════════════════════════════
+const LOGIN_I18N = {
+  th: { title:'Payroll Tool', sub:'เข้าสู่ระบบเพื่อใช้งาน', userLbl:'ชื่อผู้ใช้', passLbl:'รหัสผ่าน',
+        btn:'เข้าสู่ระบบ', errEmpty:'กรุณากรอกชื่อผู้ใช้และรหัสผ่าน', errWrong:'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' },
+  en: { title:'Payroll Tool', sub:'Sign in to continue', userLbl:'Username', passLbl:'Password',
+        btn:'Sign In', errEmpty:'Please enter username and password', errWrong:'Invalid username or password' },
+  vi: { title:'Payroll Tool', sub:'Đăng nhập để tiếp tục', userLbl:'Tên đăng nhập', passLbl:'Mật khẩu',
+        btn:'Đăng nhập', errEmpty:'Vui lòng nhập tên và mật khẩu', errWrong:'Tên đăng nhập hoặc mật khẩu sai' }
+};
+
+const ONB_STEPS = {
+  th: [
+    { icon:'👋', title:'ยินดีต้อนรับ!', desc:'เครื่องมือคำนวณค่าแรงรายวัน สำหรับทีมคลังสินค้า\nรองรับ BM, DW และฝึกงาน — คำนวณสาย, OT, หักเงินอัตโนมัติ' },
+    { icon:'📋', title:'วิธีใช้งาน', desc:'1. ตั้งค่ากะงาน (วันที่ + เวลาเริ่ม/จบ)\n2. เพิ่มพนักงาน หรือวาง Excel\n3. กรอกเวลาเข้า-ออก\n4. กดปุ่ม ⚡ คำนวณ' },
+    { icon:'🚀', title:'พร้อมใช้งาน!', desc:'ผลคำนวณจะแสดงเป็นตาราง\nสามารถ Export CSV หรือพิมพ์ได้เลย\n\nขอให้ทำงานสนุก! 🎉' }
+  ],
+  en: [
+    { icon:'👋', title:'Welcome!', desc:'Daily payroll calculator for warehouse teams.\nSupports BM, DW, and Interns — auto-computes late, OT, and deductions.' },
+    { icon:'📋', title:'How to Use', desc:'1. Set shift config (date + start/end time)\n2. Add employees or paste from Excel\n3. Fill check-in / check-out times\n4. Hit ⚡ Calculate' },
+    { icon:'🚀', title:'Ready to Go!', desc:'Results appear in a detailed table.\nExport to CSV or print anytime.\n\nHappy payrolling! 🎉' }
+  ],
+  vi: [
+    { icon:'👋', title:'Chào mừng!', desc:'Công cụ tính lương ngày cho đội kho.\nHỗ trợ BM, DW và Thực tập — tự động tính muộn, OT, khấu trừ.' },
+    { icon:'📋', title:'Cách sử dụng', desc:'1. Cài đặt ca làm (ngày + giờ bắt đầu/kết thúc)\n2. Thêm nhân viên hoặc dán từ Excel\n3. Nhập giờ vào/ra\n4. Nhấn ⚡ Tính lương' },
+    { icon:'🚀', title:'Sẵn sàng!', desc:'Kết quả hiển thị dạng bảng chi tiết.\nXuất CSV hoặc in bất cứ lúc nào.\n\nChúc làm việc vui vẻ! 🎉' }
+  ]
+};
+
+// ══════════════════════════════════════════
+//  LOGIN SYSTEM
+// ══════════════════════════════════════════
+const AUTH_CRED = { user: 'Automation', pass: '@1m!nd' };
+const AUTH_KEY = 'payroll_auth_session';
+
+function updateLoginLang() {
+  const li = LOGIN_I18N[CUR_LANG] || LOGIN_I18N.th;
+  document.getElementById('loginTitle').textContent = li.title;
+  document.getElementById('loginSub').textContent = li.sub;
+  document.getElementById('loginUserLabel').textContent = li.userLbl;
+  document.getElementById('loginPassLabel').textContent = li.passLbl;
+  document.getElementById('loginBtn').textContent = li.btn;
+}
+
+function doLogin(e) {
+  e.preventDefault();
+  const li = LOGIN_I18N[CUR_LANG] || LOGIN_I18N.th;
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  if (!u || !p) { errEl.textContent = li.errEmpty; return; }
+  if (u !== AUTH_CRED.user || p !== AUTH_CRED.pass) {
+    errEl.textContent = li.errWrong;
+    document.getElementById('loginPass').value = '';
+    return;
+  }
+  // Success
+  sessionStorage.setItem(AUTH_KEY, '1');
+  document.getElementById('loginOverlay').classList.add('hidden');
+  document.body.classList.remove('app-locked');
+  setTimeout(() => { document.getElementById('loginOverlay').remove(); }, 500);
+  // Show onboarding if not skipped
+  checkOnboarding();
+}
+
+function checkAuth() {
+  if (sessionStorage.getItem(AUTH_KEY) === '1') {
+    document.getElementById('loginOverlay').classList.add('hidden');
+    document.body.classList.remove('app-locked');
+    setTimeout(() => {
+      const lo = document.getElementById('loginOverlay');
+      if (lo) lo.remove();
+    }, 500);
+    checkOnboarding();
+    return true;
+  }
+  return false;
+}
+
+// ══════════════════════════════════════════
+//  ONBOARDING SYSTEM
+// ══════════════════════════════════════════
+const ONB_KEY = 'payroll_onboarding_skipped';
+let onbStep = 0;
+
+function checkOnboarding() {
+  if (localStorage.getItem(ONB_KEY) === '1') return;
+  onbStep = 0;
+  document.getElementById('onbOverlay').classList.remove('hidden');
+  renderOnbStep();
+}
+
+function renderOnbStep() {
+  const steps = ONB_STEPS[CUR_LANG] || ONB_STEPS.th;
+  const step = steps[onbStep];
+  const total = steps.length;
+  // Dots
+  document.getElementById('onbDots').innerHTML = steps.map((_, i) =>
+    `<span class="onb-dot${i === onbStep ? ' active' : ''}"></span>`
+  ).join('');
+  document.getElementById('onbIcon').textContent = step.icon;
+  document.getElementById('onbTitle').textContent = step.title;
+  document.getElementById('onbDesc').textContent = step.desc;
+  // Button text
+  const isLast = onbStep === total - 1;
+  const nextBtn = document.getElementById('onbNextBtn');
+  const skipBtn = document.getElementById('onbSkipBtn');
+  if (CUR_LANG === 'en') {
+    nextBtn.textContent = isLast ? 'Get Started 🚀' : 'Next →';
+    skipBtn.textContent = 'Skip';
+  } else if (CUR_LANG === 'vi') {
+    nextBtn.textContent = isLast ? 'Bắt đầu 🚀' : 'Tiếp →';
+    skipBtn.textContent = 'Bỏ qua';
+  } else {
+    nextBtn.textContent = isLast ? 'เริ่มใช้งาน 🚀' : 'ถัดไป →';
+    skipBtn.textContent = 'ข้าม';
+  }
+}
+
+function nextOnboarding() {
+  const steps = ONB_STEPS[CUR_LANG] || ONB_STEPS.th;
+  if (onbStep < steps.length - 1) {
+    onbStep++;
+    renderOnbStep();
+  } else {
+    dismissOnboarding();
+  }
+}
+
+function skipOnboarding() {
+  dismissOnboarding();
+}
+
+function dismissOnboarding() {
+  localStorage.setItem(ONB_KEY, '1');
+  document.getElementById('onbOverlay').classList.add('hidden');
+}
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+setToday();
+updateHdrSub();
+renderList();
+setLang('th');
+updateLoginLang();
+checkAuth();
+</script>
+</body>
+</html>
